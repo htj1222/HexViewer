@@ -18,31 +18,19 @@ int _tmain(int argc, const char* argv[])
 	function _function;
 	char key;
 
-	/*
-	if (argc != 2) {
-	printf("Usage: %s <file name>\n", argv[0]);
-	exit(1);
-	}
-	*/
-
-	if ((pFile = fopen(fileName, "rb")) == NULL)
-	{
+	if ((pFile = fopen(fileName, "rb")) == NULL)	{
 		perror("Cannot open file");
 		exit(1);
 	}
 
 	packetCount = _function.getPacketCount(pFile, fileName);
-
+		
 	while(1) {
 		system("cls");
-
-		printf("File: %s\n", fileName);
 		
-
 		_function.printHex(pFile, currentPacket);
-		_function.packetInfo.printInfo();
 
-		printf("\nPacket %I64u/%I64u 1 (이전) 2 (다음) Q (종료)? : ", currentPacket + 1, packetCount);
+		printf("\nPacket: %I64u/%I64u    1 (이전) 2 (다음) Q (종료)? : ", currentPacket + 1, packetCount);
 		cin >> key;
 
 		switch (tolower(key)) {

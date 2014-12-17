@@ -74,9 +74,13 @@ public:
 	TSPacket(void);
 	~TSPacket(void);
 
+	void Init();
 	void HeaderInfo(int* data);
 	int  getDataPosition();
 	void PlusDataPosition(int plus);
 	void AdaptationField(int* data, unsigned char adaptationFieldControl);
-	void printInfo();
+
+	void PrintHeaderInfo();
+	void PrintAdaptationInfo();
+
 };
