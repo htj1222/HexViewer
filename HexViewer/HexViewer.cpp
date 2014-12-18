@@ -30,7 +30,7 @@ int _tmain(int argc, const char* argv[])
 		
 		_function.printHex(pFile, currentPacket);
 
-		printf("\nPacket: %I64u/%I64u    1 (이전) 2 (다음) Q (종료)? : ", currentPacket + 1, packetCount);
+		printf("\nPacket: %I64u/%I64u    1 (이전) 2 (다음) F(찾기) Q (종료)? : ", currentPacket + 1, packetCount);
 		cin >> key;
 
 		switch (tolower(key)) {
@@ -39,6 +39,12 @@ int _tmain(int argc, const char* argv[])
 		  break;
 	  case '2':
 		  if (currentPacket+1 < packetCount) ++currentPacket;
+		  break;
+	  case 'f':
+		  __int64 temp;
+		  cin >> temp;
+		  if(temp >0 && temp <= packetCount)
+			  currentPacket = temp-1;		  
 		  break;
 	  case 'q':
 		  fclose(pFile);

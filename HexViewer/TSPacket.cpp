@@ -1,42 +1,61 @@
 #include "StdAfx.h"
 #include "TSPacket.h"
+#include "PESPacket.h"
 #include <iostream>
 using namespace std;
 
 TSPacket::TSPacket(void)
 {
+	Init();
 }
-
 
 TSPacket::~TSPacket(void)
 {
 	//free(privateDataByte);
 }
 
-
 void TSPacket::HeaderInfo(int* data)
 {
-	syncbyte = data[0];									//8bit
-	transportErrorIndicator	  = (data[1]>>7		  ) == 1 ? true : false;	//1bit
-	payloadUnitStartIndicator = (data[1]>>6 & 0x01) == 1 ? true : false;	//1bit
-	transportPriorityIndicator= (data[1]>>5 & 0x01) == 1 ? true : false;	//1bit
+	//초기화
+	pos=0;
 
-	unsigned short tempPID = data[1]<<3 & 0xF8;		//5bit
+	syncbyte = data[pos];									//8bit
+	transportErrorIndicator	  = (data[pos+1]>>7		  ) == 1 ? true : false;	//1bit
+	payloadUnitStartIndicator = (data[pos+1]>>6 & 0x01) == 1 ? true : false;	//1bit
+	transportPriorityIndicator= (data[pos+1]>>5 & 0x01) == 1 ? true : false;	//1bit
+
+	unsigned short tempPID = data[pos+1]<<3 & 0xF8;		//5bit
 	tempPID = tempPID << 5;								
-	tempPID += data[2];								//5+8bit 13bit
+	tempPID += data[pos+2];							//5+8bit 13bit
 	PID = tempPID;									//13bit
 
-	transportScramblingControl	= data[3]>>6;		//2bit
-	adaptationFieldControl		= data[3]>>4 & 0x03;//2bit
-	continuityCounter			= data[3]	 & 0x0F;//4bit
+	transportScramblingControl	= data[pos+3]>>6;		//2bit
+	adaptationFieldControl		= data[pos+3]>>4 & 0x03;//2bit
+	continuityCounter			= data[pos+3]	 & 0x0F;//4bit
+
+	PlusDataPosition(4);//32bit
+
+	PrintHeaderInfo();
 
 	if(adaptationFieldControl == 2 || adaptationFieldControl == 3){
 		AdaptationField(data, adaptationFieldControl);
+		PrintAdaptationInfo();
 	}
 	if(adaptationFieldControl == '01' || adaptationFieldControl == '11') {
 		/*for (i = 0; i < N; i++){
 			data_byte 8 bslbf
 		}*/
+	}
+	
+	if(payloadUnitStartIndicator)
+	{
+		if(data[pos] == 0 && data[pos+1] == 0 && data[pos+2] == 1)
+		{
+			//PESPacket Start
+			PESPacket pesPacket;
+			pesPacket.SetPos(pos);
+			pesPacket.HeaderInfo(data);
+		}
 	}
 }
 void TSPacket::PlusDataPosition(int plus)
@@ -51,10 +70,6 @@ int  TSPacket::getDataPosition()
 
 void TSPacket::AdaptationField(int* data, unsigned char adaptationFieldControl)
 {
-	//초기화
-	pos=0;
-	PlusDataPosition(4);
-
 	adaptationFieldLength	= data[pos];
 	PlusDataPosition(1);//8bit
 
@@ -158,14 +173,17 @@ void TSPacket::AdaptationField(int* data, unsigned char adaptationFieldControl)
 			if(ltwFlag)
 			{
 				ltwValidFlag = ((data[pos] & 0x80) >> 7) == 1 ? true : false;	//1bit
-				ltwOffset = data[pos] & 0x7FFF;									//15bit
+				ltwOffset  = data[pos  ] & 0x7F << 8;							//15bit
+				ltwOffset += data[pos+1];										//15bit
 				PlusDataPosition(2);//16bit
 			}
 
 			if(piecewiseRateFlag)
 			{
 				//2bit reserved
-				piecewiseRate = data[pos] & 0x7FFFFF;	//22bit
+				piecewiseRate  = (data[pos]	& 0x3F) << 16;	//22bit
+				piecewiseRate += (data[pos+1] ) << 8;		//22bit
+				piecewiseRate += (data[pos+2] );			//22bit
 				PlusDataPosition(3);//24bit
 			}
 
@@ -182,10 +200,81 @@ void TSPacket::AdaptationField(int* data, unsigned char adaptationFieldControl)
 		}
 	}
 }
+void TSPacket::Init()
+{
+	syncbyte=0;						//8bit
+	transportErrorIndicator=0;		//1bit
+	payloadUnitStartIndicator=0;	//1bit
+	transportPriorityIndicator=0;	//1bit
+	PID=0;							//13bit
+	transportScramblingControl=0;	//2bit
+	adaptationFieldControl=0;		//2bit
+	continuityCounter=0;			//4bit
 
-void TSPacket::printInfo() {
+	adaptationFieldLength=0;			//8bit
+	discontinuityIndicator=0;			//1bit
+	randomAccessIndicator=0;			//1bit
+	elementaryStreamPriorityIndicator=0;//1bit
+	PCRFlag=0;							//1bit
+	OPCRFlag=0;							//1bit
+	splicingPointFlag=0;				//1bit
+	transportPrivateDataFlag=0;			//1bit
+	adaptationFieldExtensionFlag=0;		//1bit
+
+	//pcr
+	programClockReferenceBase=0;		//33bit
+	reserved=0;							//6bit
+	programClockReferenceExtension=0;	//9bit
+	resultPCR=0;
+
+	//opcr
+	originalProgramClockReferenceBase=0;		//33bit
+	originalProgramClockReferenceExtension=0;	//9bit
+	resultOPCR=0;
+
+	//spliceCountdown
+	spliceCountdown=0;//8bit
+
+	//privateData
+	transportPrivateDataLength=0;	//8bit
+	privateDataByte=NULL;			//8*n bit
+
+	//extension
+	adaptationFieldExtensionLength=0;	//8bit
+	ltwFlag=0;							//1bit
+	piecewiseRateFlag=0;				//1bit
+	seamlessSpliceFlag=0;				//1bit
+	//+5bit reserved
+
+	//ltw
+	ltwValidFlag=0; //1bit
+	ltwOffset=0;	//15bit
+
+	//piecewise
+	piecewiseRate=0;//22bit
+
+	//seamless
+	spliceType=0;	//4bit
+	DTSNextAU=0;	//36bit
+}
+
+void TSPacket::PrintHeaderInfo()
+{
+	cout<<"\n == Transport packet fields == "<< endl;
+	cout<<"syncbyte: "					<<	hex << (int)syncbyte			<<endl;
+	cout<<"transportErrorIndicator: "	<<	transportErrorIndicator			<<endl;
+	cout<<"payloadUnitStartIndicator: "	<<	payloadUnitStartIndicator		<<endl;
+	cout<<"transportPriorityIndicator: "<<	transportPriorityIndicator		<<endl;
+	cout<<"PID: "						<<	dec << PID						<<endl;
+	cout<<"transportScramblingControl: "<<	(int)transportScramblingControl	<<endl;
+	cout<<"adaptationFieldControl: "	<<	(int)adaptationFieldControl		<<endl;
+	cout<<"continuityCounter: "			<<	(int)continuityCounter			<<endl<<endl;	
+}
+
+void TSPacket::PrintAdaptationInfo()
+{	
 	cout<<" == Adaptation fields == "<< endl;
-	cout<<"Adaptation_field_length: "<<	adaptationFieldLength				<<endl;
+	cout<<"Adaptation_field_length: "<<	(int)adaptationFieldLength			<<endl;
 	cout<<"discontinuity_indicator: "<<	discontinuityIndicator				<<endl;
 	cout<<"random_access_indicator: "<<	randomAccessIndicator				<<endl;
 	cout<<"ES_priority_indicator: "	<<	elementaryStreamPriorityIndicator	<<endl;
@@ -198,4 +287,48 @@ void TSPacket::printInfo() {
 	if(PCRFlag){
 		cout<<"PCR : "	<<	resultPCR	<<endl;
 	}
+
+	if(OPCRFlag){
+		cout<<"OPCR : "	<<	resultOPCR	<<endl;
+	}
+
+	if(splicingPointFlag)
+	{
+		cout<<"spliceCountdown : "	<<	spliceCountdown	<<endl;
+	}
+
+	if(transportPrivateDataFlag)
+	{
+		cout<<"transportPrivateDataLength : "	<<	transportPrivateDataLength	<<endl;
+		for(int i=0; i<transportPrivateDataLength; i++)
+		{
+			cout<<"privateDataByte : "	<<	privateDataByte[i]	<<endl;
+		}	
+	}
+
+	if(adaptationFieldExtensionFlag)
+	{
+		cout<<"adaptationFieldExtensionLength : "	<<	adaptationFieldExtensionLength	<<endl;
+		cout<<"ltwFlag : "				<<	ltwFlag				<<endl;
+		cout<<"piecewiseRateFlag : "	<<	piecewiseRateFlag	<<endl;
+		cout<<"seamlessSpliceFlag : "	<<	seamlessSpliceFlag	<<endl;
+
+		if(ltwFlag)
+		{
+			cout<<"ltwValidFlag : "	<<	ltwValidFlag	<<endl;
+			cout<<"ltwOffset : "	<<	ltwOffset		<<endl;
+		}
+
+		if(piecewiseRateFlag)
+		{
+			cout<<"piecewiseRate : "	<<	piecewiseRate	<<endl;
+		}
+
+		if(seamlessSpliceFlag)
+		{
+			cout<<"spliceType : "	<<	spliceType	<<endl;
+			cout<<"DTSNextAU : "	<<	DTSNextAU	<<endl;
+		}
+	}
+	cout<<endl;
 }
