@@ -19,8 +19,6 @@ void PESPacket::SetPos(int pos_input)
 
 void PESPacket::Init()
 {
-	
-
 	packet_start_code_prefix=0;	//24bit
 	stream_id=0;					//8bit
 	PES_packet_length=0;			//16bit

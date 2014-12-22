@@ -1,8 +1,9 @@
 #include "StdAfx.h"
 #include "TSPacket.h"
 #include "PESPacket.h"
-#include <iostream>
-using namespace std;
+#include "PATPacket.h"
+#include "CATPacket.h"
+#include "PMTPacket.h"
 
 TSPacket::TSPacket(void)
 {
@@ -19,15 +20,13 @@ void TSPacket::HeaderInfo(int* data)
 	//ÃÊ±âÈ­
 	pos=0;
 
-	syncbyte = data[pos];									//8bit
+	syncbyte = data[pos];														//8bit
 	transportErrorIndicator	  = (data[pos+1]>>7		  ) == 1 ? true : false;	//1bit
 	payloadUnitStartIndicator = (data[pos+1]>>6 & 0x01) == 1 ? true : false;	//1bit
 	transportPriorityIndicator= (data[pos+1]>>5 & 0x01) == 1 ? true : false;	//1bit
 
-	unsigned short tempPID = data[pos+1]<<3 & 0xF8;		//5bit
-	tempPID = tempPID << 5;								
-	tempPID += data[pos+2];							//5+8bit 13bit
-	PID = tempPID;									//13bit
+	PID  = (data[pos+1] & 0x1F	)<<8;	//5bit
+	PID += (data[pos+2]			);		//8bit
 
 	transportScramblingControl	= data[pos+3]>>6;		//2bit
 	adaptationFieldControl		= data[pos+3]>>4 & 0x03;//2bit
@@ -46,7 +45,7 @@ void TSPacket::HeaderInfo(int* data)
 			data_byte 8 bslbf
 		}*/
 	}
-	
+		
 	if(payloadUnitStartIndicator)
 	{
 		if(data[pos] == 0 && data[pos+1] == 0 && data[pos+2] == 1)
@@ -55,6 +54,21 @@ void TSPacket::HeaderInfo(int* data)
 			PESPacket pesPacket;
 			pesPacket.SetPos(pos);
 			pesPacket.HeaderInfo(data);
+		}else if(data[pos] == 0 && data[pos+1] == 0)
+		{
+			PATPacket patPacket;
+			patPacket.SetPos(pos);
+			patPacket.HeaderInfo(data);
+		}else if(data[pos] == 0 && data[pos+1] == 1)
+		{
+			CCATPacket catPacket;
+			catPacket.SetPos(pos);
+			catPacket.HeaderInfo(data);
+		}else if(data[pos] == 0 && data[pos+1] == 2)
+		{
+			PMTPacket pmtPacket;
+			pmtPacket.SetPos(pos);
+			pmtPacket.HeaderInfo(data);
 		}
 	}
 }
@@ -261,7 +275,7 @@ void TSPacket::Init()
 void TSPacket::PrintHeaderInfo()
 {
 	cout<<"\n == Transport packet fields == "<< endl;
-	cout<<"syncbyte: "					<<	hex << (int)syncbyte			<<endl;
+	cout<<"syncbyte: 0x"					<<	hex << (int)syncbyte			<<endl;
 	cout<<"transportErrorIndicator: "	<<	transportErrorIndicator			<<endl;
 	cout<<"payloadUnitStartIndicator: "	<<	payloadUnitStartIndicator		<<endl;
 	cout<<"transportPriorityIndicator: "<<	transportPriorityIndicator		<<endl;

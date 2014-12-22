@@ -1,15 +1,15 @@
 // HexViewer.cpp : 콘솔 응용 프로그램에 대한 진입점을 정의합니다.
 #include "stdafx.h"
 #include <stdio.h>
-#include <iostream>
 #include <stdlib.h> // system()
 #include <string.h> // memset()
 #include <ctype.h>  // tolower()
 #include <conio.h>  // getch()
+#include "HTTPConnect.h"
+#include "ServerSocket.h"
 
 //char* fileName = "UHD_fin2.mpg";
 char* fileName = "notake.mpg";
-using namespace std;
 
 int _tmain(int argc, const char* argv[])
 {
@@ -22,7 +22,8 @@ int _tmain(int argc, const char* argv[])
 		perror("Cannot open file");
 		exit(1);
 	}
-
+	//ServerSocket test;
+	
 	packetCount = _function.getPacketCount(pFile, fileName);
 		
 	while(1) {
@@ -42,7 +43,7 @@ int _tmain(int argc, const char* argv[])
 		  break;
 	  case 'f':
 		  __int64 temp;
-		  cin >> temp;
+		  cin >> (__int64)temp;
 		  if(temp >0 && temp <= packetCount)
 			  currentPacket = temp-1;		  
 		  break;
