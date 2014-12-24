@@ -11,9 +11,25 @@
 #include <tchar.h>
 #include <WinSock2.h>
 #include <process.h>
+#include <math.h>		// ceil()
+#include <string.h>		// memset()
+#include <ctype.h>		// isprint()
+#include <sys/stat.h>	// _stati64()
 
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
-#include "function.h"
+#include "FileDescriptor.h"
+#include "TSPacket.h"
+#include "PESPacket.h"
+#include "PATPacket.h"
+#include "CATPacket.h"
+#include "PMTPacket.h"
 #include <iostream>
+
+
+typedef unsigned char  uint8;
+typedef unsigned short uint16;
+typedef unsigned int   uint32;
+typedef unsigned long  uint64;
+
 using namespace std;

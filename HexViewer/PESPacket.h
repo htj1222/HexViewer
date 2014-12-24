@@ -1,7 +1,18 @@
 #pragma once
+#include "StdAfx.h"
+
+
+typedef unsigned char  uint8;
+typedef unsigned short uint16;
+typedef unsigned int   uint32;
+typedef unsigned long  uint64;
+
+
 class PESPacket
 {
 private:
+	bool is_exist_data_;		//데이터 존재 유무 저장
+
 	uint32 packet_start_code_prefix;	//24bit
 	uint8  stream_id;					//8bit
 	uint16 PES_packet_length;			//16bit
@@ -99,7 +110,7 @@ public:
 
 	void SetPos(int pos);
 	void Init();
-	void HeaderInfo(int* data);
+	void HeaderInfo(unsigned char* data);
 	void PlusDataPosition(int plus);
 
 	void PrintPESInfo();

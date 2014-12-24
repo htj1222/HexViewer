@@ -19,6 +19,8 @@ void PESPacket::SetPos(int pos_input)
 
 void PESPacket::Init()
 {
+	is_exist_data_ = false;
+
 	packet_start_code_prefix=0;	//24bit
 	stream_id=0;					//8bit
 	PES_packet_length=0;			//16bit
@@ -83,8 +85,10 @@ void PESPacket::PlusDataPosition(int plus)
 	pos += plus;
 }
 
-void  PESPacket::HeaderInfo(int* data)
+void  PESPacket::HeaderInfo(unsigned char* data)
 {
+	is_exist_data_ = true;
+
 	packet_start_code_prefix  = data[pos  ]	<<16;	//24bit
 	packet_start_code_prefix += data[pos+1]	<<8;	//24bit
 	packet_start_code_prefix += data[pos+2]	;		//24bit
@@ -317,12 +321,12 @@ void  PESPacket::HeaderInfo(int* data)
 		{
 			//padding_byte 8bit
 		}
-	}
-	PrintPESInfo();
+	}	
 }
 
 void PESPacket::PrintPESInfo()
 {
+	if(is_exist_data_){
 	//cout << "packet_start_code_prefix : "	<< packet_start_code_prefix		<< endl;
 	cout<<"\n == PES header fields == "<< endl;
 	cout << "stream_id : "					<< hex << (int)stream_id					<< endl;
@@ -454,4 +458,6 @@ void PESPacket::PrintPESInfo()
 		}		
 	}
 	cout << endl;
+	is_exist_data_ = false;
+	}
 }

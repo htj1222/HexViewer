@@ -16,15 +16,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="function.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="TSPacket.h">
@@ -48,15 +46,15 @@
     <ClInclude Include="ServerSocket.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="FileDescriptor.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="HexViewer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="function.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="TSPacket.cpp">
@@ -78,6 +76,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="ServerSocket.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="FileDescriptor.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

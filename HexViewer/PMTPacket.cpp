@@ -13,8 +13,18 @@ PMTPacket::~PMTPacket(void)
 {
 }
 
+void PMTPacket::Reset()
+{
+	if(is_exist_data_){
+	free(streamInfo);
+	Init();
+	}
+}
+
 void PMTPacket::Init()
 {
+	is_exist_data_ = false;
+
 	pointer_field=0;
 	table_id=0;					//8bit
 	section_syntax_indicator=0;	//1bit
@@ -35,7 +45,7 @@ void PMTPacket::Init()
 	program_info_length=0;		//12bit
 
 	streamInfo=NULL;
-
+	streamInfo_size_=0;
 	CRC_32=0;					//32bit
 }
 
@@ -49,8 +59,9 @@ void PMTPacket::PlusDataPosition(int plus)
 	pos += plus;
 }
 
-void PMTPacket::PrintInfo()
+void PMTPacket::PrintPMTInfo()
 {
+	if(is_exist_data_){
 	cout << "== PMT packet fields == "<< endl;
 	cout << "table_id : "					<< hex <<(int)table_id << dec		<< endl;
 	cout << "section_syntax_indicator : "	<< section_syntax_indicator			<< endl;
@@ -63,19 +74,22 @@ void PMTPacket::PrintInfo()
 	
 	cout << "PCR_PID : "					<< (int)PCR_PID						<< endl;
 	cout << "program_info_length : "		<< (int)program_info_length			<< endl << endl;
-	
-	int size = ( (section_length-13) - program_info_length ) / 5;	
-	for(int i=0; i<size; i++)
+		
+	for(int i=0; i<streamInfo_size_; i++)
 	{
 		cout << "stream_type : "				<< (int)streamInfo[i].stream_type			 <<endl;
 		cout << "elementary_PID : "				<< (int)streamInfo[i].elementary_PID		 <<endl;
-		cout << "ES_info_length : "				<< (int)streamInfo[i].ES_info_length		 <<endl<<endl;
+		cout << "ES_info_length : "				<< (int)streamInfo[i].ES_info_length		 <<endl<<endl;				
 	}
 	cout << "CRC_32 : " <<hex<< (CRC_32) << dec<< endl<<endl;
+	is_exist_data_ = false;
+	}
 }
 
-void PMTPacket::HeaderInfo(int* data)
+void PMTPacket::HeaderInfo(unsigned char* data)
 {
+	is_exist_data_ = true;
+
 	pointer_field = data[pos];	//8bit
 	PlusDataPosition(1);
 
@@ -120,35 +134,41 @@ void PMTPacket::HeaderInfo(int* data)
 	}
 	PlusDataPosition(program_info_length);//+@bit
 
-	int size = ( (section_length-13) - program_info_length ) / 5;
+	int size = ( (section_length-13) - program_info_length );
 	streamInfo = (StreamInfo *) malloc(sizeof(StreamInfo) * size);
 
-	for(int i=0; i<size; i++)
+	int i=0, pointer=1;
+	while(pointer!=(size+1))
 	{
 		streamInfo[i].stream_type = data[pos]; //8bit
 		PlusDataPosition(1);//+8bit
+		pointer+=1;
 
 		//3bit reserved
 		streamInfo[i].elementary_PID  = (data[pos]	& 0x1F) <<8; //5bit
 		streamInfo[i].elementary_PID += data[pos+1];			 //8bit
 		PlusDataPosition(2);//+16bit
+		pointer+=2;
 
 		//3bit reserved
-		streamInfo[i].ES_info_length  = (data[pos]	& 0x0F) <<8; //4bit
+		streamInfo[i].ES_info_length  = (data[pos]	& 0x03) <<8; //4bit 2bit´Â °íÁ¤00
 		streamInfo[i].ES_info_length += data[pos+1];			 //8bit
 		PlusDataPosition(2);//+16bit
+		pointer+=2;
+
 		for(int j=0; j<streamInfo[i].ES_info_length; j++)
 		{
 			//descriptor();
 		}
-		PlusDataPosition(streamInfo[i].ES_info_length);//+@bit		
+		PlusDataPosition(streamInfo[i].ES_info_length);//+@bit
+		pointer+=streamInfo[i].ES_info_length;
+		i++;
 	}
+	streamInfo_size_ = i;
 
 	CRC_32  = (data[pos  ])<<24;	//8bit
 	CRC_32 += (data[pos+1])<<16;	//8bit
 	CRC_32 += (data[pos+2])<<8;		//8bit
 	CRC_32 += (data[pos+3]);		//8bit
 	PlusDataPosition(4);//+32bit
-
-	PrintInfo();
 }

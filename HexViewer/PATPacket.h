@@ -1,4 +1,11 @@
 #pragma once
+#include "StdAfx.h"
+
+typedef unsigned char  uint8;
+typedef unsigned short uint16;
+typedef unsigned int   uint32;
+typedef unsigned long  uint64;
+
 
 class PIDinfo
 {
@@ -12,6 +19,8 @@ public:
 class PATPacket
 {
 private:
+	bool is_exist_data_;		//데이터 존재 유무 저장
+
 	int pos;
 
 	uint8 pointer_field;			//8bit
@@ -34,8 +43,9 @@ public:
 	void Init();	
 	void SetPos(int pos);
 	void PlusDataPosition(int plus);
-	void HeaderInfo(int* data);
-	void PrintInfo();
+	void HeaderInfo(unsigned char* data);
+	void PrintPATInfo();
+	void Reset();
 
 	PATPacket(void);
 	~PATPacket(void);

@@ -1,9 +1,5 @@
 #include "StdAfx.h"
-#include "TSPacket.h"
-#include "PESPacket.h"
-#include "PATPacket.h"
-#include "CATPacket.h"
-#include "PMTPacket.h"
+
 
 TSPacket::TSPacket(void)
 {
@@ -12,10 +8,9 @@ TSPacket::TSPacket(void)
 
 TSPacket::~TSPacket(void)
 {
-	//free(privateDataByte);
 }
 
-void TSPacket::HeaderInfo(int* data)
+void TSPacket::GetHeaderInfo(unsigned char* data)
 {
 	//√ ±‚»≠
 	pos=0;
@@ -33,45 +28,38 @@ void TSPacket::HeaderInfo(int* data)
 	continuityCounter			= data[pos+3]	 & 0x0F;//4bit
 
 	PlusDataPosition(4);//32bit
-
-	PrintHeaderInfo();
-
+	
 	if(adaptationFieldControl == 2 || adaptationFieldControl == 3){
-		AdaptationField(data, adaptationFieldControl);
-		PrintAdaptationInfo();
+		GetAdaptationField(data, adaptationFieldControl);
 	}
 	if(adaptationFieldControl == '01' || adaptationFieldControl == '11') {
 		/*for (i = 0; i < N; i++){
 			data_byte 8 bslbf
 		}*/
 	}
-		
+
 	if(payloadUnitStartIndicator)
 	{
 		if(data[pos] == 0 && data[pos+1] == 0 && data[pos+2] == 1)
-		{
-			//PESPacket Start
-			PESPacket pesPacket;
-			pesPacket.SetPos(pos);
-			pesPacket.HeaderInfo(data);
+		{			
+			pes_packet_.SetPos(pos);
+			pes_packet_.HeaderInfo(data);
 		}else if(data[pos] == 0 && data[pos+1] == 0)
-		{
-			PATPacket patPacket;
-			patPacket.SetPos(pos);
-			patPacket.HeaderInfo(data);
+		{			
+			pat_packet_.SetPos(pos);
+			pat_packet_.HeaderInfo(data);
 		}else if(data[pos] == 0 && data[pos+1] == 1)
 		{
-			CCATPacket catPacket;
-			catPacket.SetPos(pos);
-			catPacket.HeaderInfo(data);
+			cat_packet_.SetPos(pos);
+			cat_packet_.HeaderInfo(data);
 		}else if(data[pos] == 0 && data[pos+1] == 2)
 		{
-			PMTPacket pmtPacket;
-			pmtPacket.SetPos(pos);
-			pmtPacket.HeaderInfo(data);
+			pmt_packet_.SetPos(pos);
+			pmt_packet_.HeaderInfo(data);
 		}
 	}
 }
+
 void TSPacket::PlusDataPosition(int plus)
 {
 	pos += plus;
@@ -82,8 +70,10 @@ int  TSPacket::getDataPosition()
 	return pos;
 }
 
-void TSPacket::AdaptationField(int* data, unsigned char adaptationFieldControl)
+void TSPacket::GetAdaptationField(unsigned char* data, unsigned char adaptationFieldControl)
 {
+	is_exist_data_ = true;
+
 	adaptationFieldLength	= data[pos];
 	PlusDataPosition(1);//8bit
 
@@ -272,10 +262,23 @@ void TSPacket::Init()
 	DTSNextAU=0;	//36bit
 }
 
+void TSPacket::Reset()
+{
+	if(transportPrivateDataFlag)
+	{
+		free(privateDataByte);
+	}
+	Init();	
+	pes_packet_.Init(); //pes
+	pat_packet_.Reset(); //pat
+	cat_packet_.Init(); //cat
+	pmt_packet_.Reset(); //pmt
+}
+
 void TSPacket::PrintHeaderInfo()
 {
 	cout<<"\n == Transport packet fields == "<< endl;
-	cout<<"syncbyte: 0x"					<<	hex << (int)syncbyte			<<endl;
+	cout<<"syncbyte: 0x"				<<	hex << (int)syncbyte			<<endl;
 	cout<<"transportErrorIndicator: "	<<	transportErrorIndicator			<<endl;
 	cout<<"payloadUnitStartIndicator: "	<<	payloadUnitStartIndicator		<<endl;
 	cout<<"transportPriorityIndicator: "<<	transportPriorityIndicator		<<endl;
@@ -283,10 +286,18 @@ void TSPacket::PrintHeaderInfo()
 	cout<<"transportScramblingControl: "<<	(int)transportScramblingControl	<<endl;
 	cout<<"adaptationFieldControl: "	<<	(int)adaptationFieldControl		<<endl;
 	cout<<"continuityCounter: "			<<	(int)continuityCounter			<<endl<<endl;	
+
+	PrintAdaptationInfo();
+	pes_packet_.PrintPESInfo();
+	pat_packet_.PrintPATInfo();
+	cat_packet_.PrintCATInfo();
+	pmt_packet_.PrintPMTInfo();
 }
 
 void TSPacket::PrintAdaptationInfo()
 {	
+	if(is_exist_data_)
+	{
 	cout<<" == Adaptation fields == "<< endl;
 	cout<<"Adaptation_field_length: "<<	(int)adaptationFieldLength			<<endl;
 	cout<<"discontinuity_indicator: "<<	discontinuityIndicator				<<endl;
@@ -345,4 +356,6 @@ void TSPacket::PrintAdaptationInfo()
 		}
 	}
 	cout<<endl;
+	is_exist_data_ = false;
+	}
 }

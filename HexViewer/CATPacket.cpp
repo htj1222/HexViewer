@@ -13,6 +13,8 @@ CCATPacket::~CCATPacket(void)
 
 void CCATPacket::Init()
 {
+	is_exist_data_ = false;
+
 	pointer_field=0;
 	table_id=0;					//8bit
 	section_syntax_indicator=0;	//1bit
@@ -38,8 +40,9 @@ void CCATPacket::PlusDataPosition(int plus)
 	pos += plus;
 }
 
-void CCATPacket::PrintInfo()
+void CCATPacket::PrintCATInfo()
 {
+	if(is_exist_data_){
 	cout << "== CAT packet fields == "<< endl;
 	cout << "table_id : " << hex <<(int)table_id << dec << endl;
 	cout << "section_syntax_indicator : " << section_syntax_indicator << endl;
@@ -56,11 +59,15 @@ void CCATPacket::PrintInfo()
 		}
 	}
 	cout << "CRC_32 : " <<hex<< (CRC_32) << dec<< endl<<endl;
+	is_exist_data_ = false;
+	}
 }
 
 
-void CCATPacket::HeaderInfo(int* data)
+void CCATPacket::HeaderInfo(unsigned char* data)
 {
+	is_exist_data_ = true;
+
 	pointer_field = data[pos];	//8bit
 	PlusDataPosition(1);
 
@@ -101,5 +108,5 @@ void CCATPacket::HeaderInfo(int* data)
 	CRC_32 += (data[pos+3]);		//8bit
 	PlusDataPosition(4);//+32bit
 
-	PrintInfo();
+	//PrintInfo();
 }

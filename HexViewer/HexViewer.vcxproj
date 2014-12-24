@@ -72,11 +72,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CATPacket.h" />
-    <ClInclude Include="function.h" />
+    <ClInclude Include="FileDescriptor.h" />
     <ClInclude Include="HTTPConnect.h" />
     <ClInclude Include="PATPacket.h" />
     <ClInclude Include="PESPacket.h" />
@@ -88,7 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CATPacket.cpp" />
-    <ClCompile Include="function.cpp" />
+    <ClCompile Include="FileDescriptor.cpp" />
     <ClCompile Include="HexViewer.cpp" />
     <ClCompile Include="HTTPConnect.cpp" />
     <ClCompile Include="PATPacket.cpp" />
