@@ -84,7 +84,7 @@ void PATPacket::PrintPATInfo()
 	}
 }
 
-void PATPacket::HeaderInfo(unsigned char* data)
+void PATPacket::SetHeaderInfo(unsigned char* data)
 {
 	is_exist_data_ = true;
 

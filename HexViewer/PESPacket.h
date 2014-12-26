@@ -110,7 +110,7 @@ public:
 
 	void SetPos(int pos);
 	void Init();
-	void HeaderInfo(unsigned char* data);
+	void SetHeaderInfo(unsigned char* data);
 	void PlusDataPosition(int plus);
 
 	void PrintPESInfo();

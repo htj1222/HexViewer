@@ -6,11 +6,30 @@
 #include "CATPacket.h"
 #include "PMTPacket.h"
 
+#include <list>
+#include <iostream>
+#include <algorithm> //find()를 위해 필요 
+
+using namespace std;
+
 typedef unsigned char  uint8;
 typedef unsigned short uint16;
 typedef unsigned int   uint32;
 typedef unsigned long  uint64;
 
+struct ContinuityCounterValue
+{	
+	uint16 PID_;	
+	uint8 last_continuity_counter_;			//4bit
+	bool is_video_;
+};
+
+struct FindSamePID
+{
+
+	bool operator() ( ContinuityCounterValue& value ) const { return value.PID_ == ComparePID; }
+  	uint16 ComparePID;
+};
 
 class TSPacket
 {
@@ -81,12 +100,18 @@ private:
 	//seamless
 	uint8 spliceType;//4bit
 	uint64 DTSNextAU;//36bit
-
+	
+	list<ContinuityCounterValue> cc_list_;
+	
 public:
+	int cc_error_counter;
+
 	TSPacket(void);
 	~TSPacket(void);
 
 	void Init();
+	void SetPidValueInit(unsigned char* data);
+
 	void GetHeaderInfo(unsigned char* data);
 	int  getDataPosition();
 	void PlusDataPosition(int plus);
@@ -94,6 +119,8 @@ public:
 
 	void PrintHeaderInfo();
 	void PrintAdaptationInfo();
+	
+	void CheckContinuityCounter(unsigned char* data);
 
 	void Reset();
 };

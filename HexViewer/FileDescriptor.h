@@ -29,7 +29,11 @@ public:
 	__int64 GetFileSize();
 	void GetPacketData(long long page);
 	void TSPacketDataAnalysis();
-	
+
+	void CheckContinuityCounter();
+	void SetPidValueInit();
+	void PrintErrorCount();
+
 	void PrintInfo();
 	void PrintHex();
 	void CloseFile();

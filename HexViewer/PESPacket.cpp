@@ -85,7 +85,7 @@ void PESPacket::PlusDataPosition(int plus)
 	pos += plus;
 }
 
-void  PESPacket::HeaderInfo(unsigned char* data)
+void  PESPacket::SetHeaderInfo(unsigned char* data)
 {
 	is_exist_data_ = true;
 

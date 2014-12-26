@@ -59,6 +59,37 @@ void PMTPacket::PlusDataPosition(int plus)
 	pos += plus;
 }
 
+bool PMTPacket::isAudioStreamType(uint8 stream_type)
+{
+	switch(stream_type)
+	{
+	case 0x03://ISO/IEC 11172-3 Audio
+	case 0x04://ISO/IEC 13818-3 Audio
+	case 0x0F://ISO/IEC 13818-7 Audio with ADTS transport syntax(AAC_AUDIO)
+	case 0x11://ISO/IEC 14496-3 Audio with the LATM transport syntax as defined in ISO/IEC 14496-3(MPEG4_AUDIO)
+	case 0x1C://ISO/IEC 14496-3 Audio, without using any additional transport syntax, such as DST, ALS and SLS
+	case 0x81://(AC3_AUDIO)
+	case 0x82://(DTS_AUDIO)
+		return true;
+	default:return false;
+	}
+}
+
+bool PMTPacket::isVideoStreamType(uint8 stream_type)
+{
+	switch(stream_type)
+	{
+	case 0x01://ISO/IEC 11172-2 Video
+	case 0x02://ITU-T Rec. H.262 | ISO/IEC 13818-2 Video or ISO/IEC 11172-2 constrained parameter video stream
+	//case 0x10://ISO/IEC 14496-2 Visual
+	case 0x1B://AVC video stream as defined in ITU-T Rec. H.264 | ISO/IEC 14496-10 Video(H264_VIDEO)
+	case 0x1E://Auxiliary video stream as defined in ISO/IEC 23002-3
+	case 0x42://(AVS_VIDEO)
+		return true;
+	default:return false;
+	}
+}
+
 void PMTPacket::PrintPMTInfo()
 {
 	if(is_exist_data_){
@@ -77,7 +108,15 @@ void PMTPacket::PrintPMTInfo()
 		
 	for(int i=0; i<streamInfo_size_; i++)
 	{
-		cout << "stream_type : "				<< (int)streamInfo[i].stream_type			 <<endl;
+		cout << "stream_type : "				<< (int)streamInfo[i].stream_type;
+		if(isAudioStreamType(streamInfo[i].stream_type)){
+			cout << "(is Audio Stream)"			<<endl;
+		}
+		else if(isVideoStreamType(streamInfo[i].stream_type)){
+			cout << "(is Video Stream)"			<<endl;
+		}else{
+			cout << "(?)"			<<endl;
+		}
 		cout << "elementary_PID : "				<< (int)streamInfo[i].elementary_PID		 <<endl;
 		cout << "ES_info_length : "				<< (int)streamInfo[i].ES_info_length		 <<endl<<endl;				
 	}
@@ -86,7 +125,7 @@ void PMTPacket::PrintPMTInfo()
 	}
 }
 
-void PMTPacket::HeaderInfo(unsigned char* data)
+void PMTPacket::SetHeaderInfo(unsigned char* data)
 {
 	is_exist_data_ = true;
 

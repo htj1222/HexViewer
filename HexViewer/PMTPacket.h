@@ -19,7 +19,8 @@ public:
 
 class PMTPacket
 {
-private:
+
+public:
 	bool is_exist_data_;		//데이터 존재 유무 저장
 
 	int pos;
@@ -49,14 +50,16 @@ private:
 	int streamInfo_size_;
 
 	uint32 CRC_32;					//32bit
-public:
+
+
 	void Init();	
 	void SetPos(int pos);
 	void PlusDataPosition(int plus);
-	void HeaderInfo(unsigned char* data);
+	void SetHeaderInfo(unsigned char* data);
 	void PrintPMTInfo();
 	void Reset();
-
+	bool isAudioStreamType(uint8 stream_type);
+	bool isVideoStreamType(uint8 stream_type);
 	PMTPacket(void);
 	~PMTPacket(void);
 };

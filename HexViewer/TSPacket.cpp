@@ -10,6 +10,78 @@ TSPacket::~TSPacket(void)
 {
 }
 
+//cc체크, pid구분을 위한 초기화
+void TSPacket::SetPidValueInit(unsigned char* data)
+{
+	cc_error_counter = 0;
+
+    list<ContinuityCounterValue>::iterator list_iter;	//STL의 list
+	list_iter=cc_list_.begin();							//시작을 가리키도록 한다.
+	
+	list<ContinuityCounterValue>::iterator FindPID;//동일한 pid검사용
+	
+	//pid값이 같지 않을경우 추가
+	for(int i=0; i<pmt_packet_.streamInfo_size_; i++)
+	{
+		FindSamePID compare_temp;
+		compare_temp.ComparePID = (int)pmt_packet_.streamInfo[i].elementary_PID;//pid값 저장
+		FindPID = find_if( cc_list_.begin(), cc_list_.end(), compare_temp );	//find_if함수를 사용하여 검색
+
+		if( FindPID != cc_list_.end() )	{
+			cout << "error!!";//같은 값이 있을경우
+		} else{
+			//같은 값이 없을경우 추가
+			ContinuityCounterValue temp;
+			temp.PID_ = compare_temp.ComparePID;
+			temp.last_continuity_counter_ = 0;
+
+			if(pmt_packet_.isAudioStreamType(pmt_packet_.streamInfo[i].stream_type)){
+				temp.is_video_ = false;
+			} else{
+				temp.is_video_ = true;
+			}
+			
+			cc_list_.push_back(temp);			//추가
+		}
+	}
+}
+  
+void TSPacket::CheckContinuityCounter(unsigned char* data)
+{
+	ContinuityCounterValue temp;
+	temp.PID_ = ( ( data[1] & 0x1F	)<<8 ) | (data[2]);	
+	temp.last_continuity_counter_	= data[3]	 & 0x0F;//4bit
+	adaptationFieldControl			= data[3]>>4 & 0x03;//2bit
+
+	if(temp.PID_ != 8191){ //8191 = 1FFF(NULL값)
+		list<ContinuityCounterValue>::iterator FindPID;//검색용 iterator
+		FindSamePID compare_temp;
+		compare_temp.ComparePID = temp.PID_;
+		FindPID = find_if( cc_list_.begin(), cc_list_.end(), compare_temp );//검색
+
+		if( FindPID != cc_list_.end() )  //같은 pid인 경우
+		{	  
+			if( (( (*FindPID).last_continuity_counter_)) == temp.last_continuity_counter_) //현재 cc와 이전의 cc비교
+			{
+				if(++(*FindPID).last_continuity_counter_ == 16)	{//15이면 0으로 초기화
+					(*FindPID).last_continuity_counter_ = 0;
+				}
+				//cout << "same cc:"<<(int)(*FindPID).last_continuity_counter_<<". PID : "<< compare_temp.ComparePID <<endl;
+			}else{
+				if(adaptationFieldControl == 0 | adaptationFieldControl == 2){ //Adaptation field control이 0, 2인 경우 증가X					
+					//cout << "same (ada : "<<(int)adaptationFieldControl<<") PID : "<< compare_temp.ComparePID <<endl;
+				}else{
+					cc_error_counter++;  //cc 에러!!
+					//cout << "not same"<<endl;
+				}
+			}
+		}
+	}else{
+		//cout<<"NULL" << endl;
+	}
+}
+
+
 void TSPacket::GetHeaderInfo(unsigned char* data)
 {
 	//초기화
@@ -20,8 +92,7 @@ void TSPacket::GetHeaderInfo(unsigned char* data)
 	payloadUnitStartIndicator = (data[pos+1]>>6 & 0x01) == 1 ? true : false;	//1bit
 	transportPriorityIndicator= (data[pos+1]>>5 & 0x01) == 1 ? true : false;	//1bit
 
-	PID  = (data[pos+1] & 0x1F	)<<8;	//5bit
-	PID += (data[pos+2]			);		//8bit
+	PID  = ( ( data[pos+1] & 0x1F	)<<8 ) | (data[pos+2]);	
 
 	transportScramblingControl	= data[pos+3]>>6;		//2bit
 	adaptationFieldControl		= data[pos+3]>>4 & 0x03;//2bit
@@ -32,6 +103,7 @@ void TSPacket::GetHeaderInfo(unsigned char* data)
 	if(adaptationFieldControl == 2 || adaptationFieldControl == 3){
 		GetAdaptationField(data, adaptationFieldControl);
 	}
+
 	if(adaptationFieldControl == '01' || adaptationFieldControl == '11') {
 		/*for (i = 0; i < N; i++){
 			data_byte 8 bslbf
@@ -43,19 +115,19 @@ void TSPacket::GetHeaderInfo(unsigned char* data)
 		if(data[pos] == 0 && data[pos+1] == 0 && data[pos+2] == 1)
 		{			
 			pes_packet_.SetPos(pos);
-			pes_packet_.HeaderInfo(data);
+			pes_packet_.SetHeaderInfo(data);
 		}else if(data[pos] == 0 && data[pos+1] == 0)
 		{			
 			pat_packet_.SetPos(pos);
-			pat_packet_.HeaderInfo(data);
+			pat_packet_.SetHeaderInfo(data);
 		}else if(data[pos] == 0 && data[pos+1] == 1)
 		{
 			cat_packet_.SetPos(pos);
-			cat_packet_.HeaderInfo(data);
+			cat_packet_.SetHeaderInfo(data);
 		}else if(data[pos] == 0 && data[pos+1] == 2)
 		{
 			pmt_packet_.SetPos(pos);
-			pmt_packet_.HeaderInfo(data);
+			pmt_packet_.SetHeaderInfo(data);
 		}
 	}
 }
@@ -260,6 +332,8 @@ void TSPacket::Init()
 	//seamless
 	spliceType=0;	//4bit
 	DTSNextAU=0;	//36bit
+
+	is_exist_data_= false;
 }
 
 void TSPacket::Reset()
@@ -278,6 +352,25 @@ void TSPacket::Reset()
 void TSPacket::PrintHeaderInfo()
 {
 	cout<<"\n == Transport packet fields == "<< endl;
+	if(PID != 0){
+		if(PID == 8191){cout<<"  ======= NULL Packet =======" << endl;}else{
+			list<ContinuityCounterValue>::iterator FindPID;
+
+			FindSamePID compare_temp;
+			compare_temp.ComparePID = PID;		
+			FindPID = find_if( cc_list_.begin(), cc_list_.end(), compare_temp );
+
+			if( FindPID != cc_list_.end() )	{
+				if( (( (*FindPID).is_video_)) == true){
+					cout << "  ======= Video Packet =======" <<endl;
+				}else{
+					cout << "  ======= Audio Packet =======" <<endl;
+				}
+			}
+		}
+	}else{
+		cout << "" << endl;
+	}
 	cout<<"syncbyte: 0x"				<<	hex << (int)syncbyte			<<endl;
 	cout<<"transportErrorIndicator: "	<<	transportErrorIndicator			<<endl;
 	cout<<"payloadUnitStartIndicator: "	<<	payloadUnitStartIndicator		<<endl;

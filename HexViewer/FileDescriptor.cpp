@@ -2,18 +2,21 @@
 
 FileDescriptor::FileDescriptor(void)
 {
-	file_name_ = "TEST150_ASSET11.mpg";
-	//file_name_ = "notake.mpg";
+	//file_name_ = "TEST150_ASSET11.mpg";
+	file_name_ = "notake.mpg";
 	FileOpen();
 }
 
 FileDescriptor::~FileDescriptor(void)
 {
 }
+
 void FileDescriptor::CloseFile()
 {
 	fclose(p_file_);
 }
+
+
 void FileDescriptor::FileOpen(){
 	if ((p_file_ = fopen(file_name_, "rb")) == NULL)	{
 		perror("Cannot open file");
@@ -47,9 +50,6 @@ void FileDescriptor::GetPacketData(long long page)
 
 	//패킷사이즈만큼 데이터를 받아서 넣는다.
 	fread(packet_data_, 1, PACKET_SIZE , p_file_);
-
-	//패킷 분석 시작
-	TSPacketDataAnalysis();
 }
 
 void FileDescriptor::TSPacketDataAnalysis()
@@ -67,6 +67,24 @@ void FileDescriptor::PrintInfo()
 void FileDescriptor::Reset() 
 {
 	ts_packet_.Reset();
+}
+
+//cc를 위한 초기화 함수
+void FileDescriptor::SetPidValueInit()
+{
+	GetPacketData(1);				//데이터 저장
+	TSPacketDataAnalysis();			//패킷 분석 시작
+	ts_packet_.SetPidValueInit(packet_data_);
+}
+
+void FileDescriptor::CheckContinuityCounter()
+{
+	ts_packet_.CheckContinuityCounter(packet_data_);
+}
+
+void FileDescriptor::PrintErrorCount()
+{
+	cout << "error(" <<  ts_packet_.cc_error_counter << ")" << endl;
 }
 
 void FileDescriptor::PrintHex() {

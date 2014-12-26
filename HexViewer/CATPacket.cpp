@@ -64,7 +64,7 @@ void CCATPacket::PrintCATInfo()
 }
 
 
-void CCATPacket::HeaderInfo(unsigned char* data)
+void CCATPacket::SetHeaderInfo(unsigned char* data)
 {
 	is_exist_data_ = true;
 

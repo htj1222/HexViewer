@@ -34,7 +34,7 @@ public:
 	void Init();	
 	void SetPos(int pos);
 	void PlusDataPosition(int plus);
-	void HeaderInfo(unsigned char* data);
+	void SetHeaderInfo(unsigned char* data);
 	void PrintCATInfo();
 
 
