@@ -54,4 +54,5 @@ Temporary Items
 *.pdb
 *.sdf
 *.suo
-Debug
+Debug/
+HexViewer/Debug/
