@@ -52,3 +52,6 @@ Temporary Items
 *.ipch
 *.ilk
 *.pdb
+*.sdf
+*.suo
+Debug
