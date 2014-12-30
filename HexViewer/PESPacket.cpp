@@ -14,94 +14,93 @@ PESPacket::~PESPacket(void)
 
 void PESPacket::SetPos(int pos_input)
 {
-	pos=pos_input;
+	pos_=pos_input;
 }
 
 void PESPacket::Init()
 {
 	is_exist_data_ = false;
 
-	packet_start_code_prefix=0;	//24bit
-	stream_id=0;					//8bit
-	PES_packet_length=0;			//16bit
+	packet_start_code_prefix_ = 0;	//24bit
+	stream_id_ = 0;					//8bit
+	pes_packet_length_ = 0;			//16bit
 
-	PES_scrambling_control=0;//2bit
-	PES_priority=0;//1bit
-	data_alignment_indicator=0;//1bit
-	copyright=0;//1bit
-	original_or_copy=0;//1bit
-	PTS_DTS_flags=0;//2bit
-	ESCR_flag=0;//1bit
-	ES_rate_flag=0;//1bit
-	DSM_trick_mode_flag=0;//1bit
-	additional_copy_info_flag=0;//1bit
-	PES_CRC_flag=0;//1bit
-	PES_extension_flag=0;//1bit
-	PES_header_data_length=0;//8bit
+	pes_scrambling_control_ = 0;//2bit
+	pes_priority_ = 0;//1bit
+	data_alignment_indicator_ = 0;//1bit
+	copyright_ = 0;//1bit
+	original_or_copy_ = 0;//1bit
+	pts_dts_flags_ = 0;//2bit
+	escr_flag_ = 0;//1bit
+	es_rate_flag_ = 0;//1bit
+	dsm_trick_mode_flag_ = 0;//1bit
+	additional_copy_info_flag_ = 0;//1bit
+	pes_crc_flag_ = 0;//1bit
+	pes_extension_flag_ = 0;//1bit
+	pes_header_data_length_ = 0;//8bit
 	
-	PTS=0;//33bit
-	DTS=0;//33bit
-	ESCR_base=0;//33bit
-	ESCR_extension=0;//9bit
+	pts_ = 0;//33bit
+	dts_ = 0;//33bit
 
-	ES_rate=0;//22bit
+	escr_base_ = 0;//33bit
+	escr_extension_ = 0;//9bit
+
+	es_rate_ = 0;//22bit
+
+	trick_mode_control_ = 0;//3bit
+	field_id_ = 0;//2bit
+	intra_slice_refresh_ = 0;//1bit
+	frequency_truncation_ = 0;//2bit
+	rep_cntrl_ = 0;//5bit
 	
-	trick_mode_control=0;//3bit
-	field_id=0;//2bit
-	intra_slice_refresh=0;//1bit
-	frequency_truncation=0;//2bit
+	additional_copy_info_ = 0;//7bit
+	previous_pes_packet_crc_ = 0;//16bit
 
-	rep_cntrl=0;//5bit
-
-	additional_copy_info=0;//7bit
-
-	previous_PES_packet_CRC=0;//16bit
-
-	PES_private_data_flag=0;//1bit
-	pack_header_field_flag=0;//1bit
-	program_packet_sequence_counter_flag=0;//1bit
-	P_STD_buffer_flag=0;//1bit
+	pes_private_data_flag_ = 0;//1bit
+	pack_header_field_flag_ = 0;//1bit
+	program_packet_sequence_counter_flag_ = 0;//1bit
+	p_std_buffer_flag_ = 0;//1bit
 	//reserved 3 bslbf
-	PES_extension_flag_2=0;//1bit
+	pes_extension_flag_2_ = 0;//1bit
 
-	PES_private_data[2]=0;//128bit
+	pes_private_data_[2];//128bit
 
-	pack_field_length=0;//8bit
+	pack_field_length_ = 0;//8bit
 
-	program_packet_sequence_counter=0;//7bit
-	//bool marker_bit=0;//1bit
-	MPEG1_MPEG2_identifier=0;//1bit
-	original_stuff_length=0;//6bit
+	program_packet_sequence_counter_ = 0;//7bit
+	//bool marker_bit;//1bit
+	mpeg1_mpeg2_identifier_ = 0;//1bit
+	original_stuff_length_ = 0;//6bit
 
 	//'01' 2 bslbf
-	P_STD_buffer_scale=0;//1bit
-	P_STD_buffer_size=0;//13bit
+	p_std_buffer_scale_ = 0;//1bit
+	p_std_buffer_size_ = 0;//13bit
 
-	PES_extension_field_length=0;//7bit
+	pes_extension_field_length_ = 0;//7bit
 }
 
 void PESPacket::PlusDataPosition(int plus)
 {
-	pos += plus;
+	pos_ += plus;
 }
 
 void  PESPacket::SetHeaderInfo(unsigned char* data)
 {
 	is_exist_data_ = true;
 
-	packet_start_code_prefix  = data[pos  ]	<<16;	//24bit
-	packet_start_code_prefix += data[pos+1]	<<8;	//24bit
-	packet_start_code_prefix += data[pos+2]	;		//24bit
+	packet_start_code_prefix_  = data[pos_ ]	<<16;	//24bit
+	packet_start_code_prefix_ += data[pos_+1]	<<8;	//24bit
+	packet_start_code_prefix_ += data[pos_+2]	;		//24bit
 	PlusDataPosition(3);//+24bit
 
-	stream_id = data[pos];			//8bit
+	stream_id_ = data[pos_];			//8bit
 	PlusDataPosition(1);//+8bit
 
-	PES_packet_length  = data[pos  ]<<8;			//16bit
-	PES_packet_length += data[pos+1]	;			//16bit
+	pes_packet_length_  = data[pos_ ]<<8;			//16bit
+	pes_packet_length_ += data[pos_+1]	;			//16bit
 	PlusDataPosition(2);//+16bit
 
-	uint8 id = stream_id;
+	uint8 id = stream_id_;
 
 	if(	   id != program_stream_map
 		&& id != padding_stream
@@ -113,182 +112,182 @@ void  PESPacket::SetHeaderInfo(unsigned char* data)
 		&& id != typeE_stream)
 	{
 		//'10'
-		PES_scrambling_control		= (data[pos] & 0x30	) >>4;//2bit
-		PES_priority				= (data[pos] & 0x08	) >>3;//1bit
-		data_alignment_indicator	= (data[pos] & 0x04	) >>2;//1bit
-		copyright					= (data[pos] & 0x02	) >>1;//1bit
-		original_or_copy			= (data[pos] & 0x01	)	 ;//1bit
+		pes_scrambling_control_		= (data[pos_] & 0x30	) >>4;//2bit
+		pes_priority_				= (data[pos_] & 0x08	) >>3;//1bit
+		data_alignment_indicator_	= (data[pos_] & 0x04	) >>2;//1bit
+		copyright_					= (data[pos_] & 0x02	) >>1;//1bit
+		original_or_copy_			= (data[pos_] & 0x01	)	 ;//1bit
 		PlusDataPosition(1);//+8bit
 
-		PTS_DTS_flags				= (data[pos] & 0xC0	) >>6;//2bit
-		ESCR_flag					= (data[pos] & 0x20	) >>5;//1bit
-		ES_rate_flag				= (data[pos] & 0x10	) >>4;//1bit
-		DSM_trick_mode_flag			= (data[pos] & 0x08	) >>3;//1bit
-		additional_copy_info_flag	= (data[pos] & 0x04	) >>2;//1bit
-		PES_CRC_flag				= (data[pos] & 0x02	) >>1;//1bit
-		PES_extension_flag			= (data[pos] & 0x01	)    ;//1bit
+		pts_dts_flags_				= (data[pos_] & 0xC0	) >>6;//2bit
+		escr_flag_					= (data[pos_] & 0x20	) >>5;//1bit
+		es_rate_flag_				= (data[pos_] & 0x10	) >>4;//1bit
+		dsm_trick_mode_flag_		= (data[pos_] & 0x08	) >>3;//1bit
+		additional_copy_info_flag_	= (data[pos_] & 0x04	) >>2;//1bit
+		pes_crc_flag_				= (data[pos_] & 0x02	) >>1;//1bit
+		pes_extension_flag_			= (data[pos_] & 0x01	)    ;//1bit
 		PlusDataPosition(1);//+8bit
 
-		PES_header_data_length		= (data[pos]);//8bit
+		pes_header_data_length_		= (data[pos_]);//8bit
 		PlusDataPosition(1);//+8bit
 
-		if(PTS_DTS_flags == 2)//'10'
+		if(pts_dts_flags_ == 2)//'10'
 		{
 			//0010 //4bit
-			PTS	 = (data[pos  ]	&	0x0E)	<< 29;
-			PTS	+= (data[pos+1]			)	<< 22;
-			PTS	+= (data[pos+2]	&	0xFE)	<< 14;
-			PTS	+= (data[pos+3]			)	<< 7;
-			PTS	+= (data[pos+4]	&	0xFE)	>> 1;
+			pts_	 = (data[pos_ ]	&	0x0E)	<< 29;
+			pts_	+= (data[pos_+1]			)	<< 22;
+			pts_	+= (data[pos_+2]	&	0xFE)	<< 14;
+			pts_	+= (data[pos_+3]			)	<< 7;
+			pts_	+= (data[pos_+4]	&	0xFE)	>> 1;
 			PlusDataPosition(5);//+40bit
 		}
 
-		if(PTS_DTS_flags == 3)//'11'
+		if(pts_dts_flags_ == 3)//'11'
 		{
 			//'0011'
-			PTS	 = (data[pos  ]	&	0x0E)	<< 29;
-			PTS	+= (data[pos+1]			)	<< 22;
-			PTS	+= (data[pos+2]	&	0xFE)	<< 14;
-			PTS	+= (data[pos+3]			)	<< 7;
-			PTS	+= (data[pos+4]	&	0xFE)	>> 1;
+			pts_	 = (data[pos_ ]	&	0x0E)	<< 29;
+			pts_	+= (data[pos_+1]			)	<< 22;
+			pts_	+= (data[pos_+2]	&	0xFE)	<< 14;
+			pts_	+= (data[pos_+3]			)	<< 7;
+			pts_	+= (data[pos_+4]	&	0xFE)	>> 1;
 			PlusDataPosition(5);//+40bit
 
 			//'0001'
-			DTS	 = (data[pos  ]	&	0x0E)	<< 29;
-			DTS	+= (data[pos+1]			)	<< 22;
-			DTS	+= (data[pos+2]	&	0xFE)	<< 14;
-			DTS	+= (data[pos+3]			)	<< 7;
-			DTS	+= (data[pos+4]	&	0xFE)	>> 1;
+			dts_	 = (data[pos_ ]	&	0x0E)	<< 29;
+			dts_	+= (data[pos_+1]			)	<< 22;
+			dts_	+= (data[pos_+2]	&	0xFE)	<< 14;
+			dts_	+= (data[pos_+3]			)	<< 7;
+			dts_	+= (data[pos_+4]	&	0xFE)	>> 1;
 			PlusDataPosition(5);//+40bit
 		}
 
-		if(ESCR_flag)//+48bit
+		if(escr_flag_)//+48bit
 		{
 			//2bit
-			ESCR_base	 = (data[pos  ]	&	0x38)	<< 30;
-			ESCR_base	+= (data[pos  ]	&	0x03)	<< 28;
-			ESCR_base	+= (data[pos+1]			)	<< 20;
-			ESCR_base	+= (data[pos+2]	&	0xF8)	<< 15;
-			ESCR_base	+= (data[pos+2]	&	0x03)	<< 13;
-			ESCR_base	+= (data[pos+3]			)	<< 5;
-			ESCR_base	+= (data[pos+4]	&	0xF8)	;
+			escr_base_	 = (data[pos_ ]	&	0x38)	<< 30;
+			escr_base_	+= (data[pos_ ]	&	0x03)	<< 28;
+			escr_base_	+= (data[pos_+1]			)	<< 20;
+			escr_base_	+= (data[pos_+2]	&	0xF8)	<< 15;
+			escr_base_	+= (data[pos_+2]	&	0x03)	<< 13;
+			escr_base_	+= (data[pos_+3]			)	<< 5;
+			escr_base_	+= (data[pos_+4]	&	0xF8)	;
 			//33bit
 
-			ESCR_extension = (data[pos+4]	&	0x03) <<7;
-			ESCR_extension = (data[pos+5]	&	0xFE) >>1;
+			escr_extension_ = (data[pos_+4]	&	0x03) <<7;
+			escr_extension_ = (data[pos_+5]	&	0xFE) >>1;
 			//9bit
 
 			PlusDataPosition(6);//+48bit
 		}
 
-		if(ES_rate_flag)//+24bit
+		if(es_rate_flag_)//+24bit
 		{
 			//1bit marker
-			ES_rate  = (data[pos]	& 0x7F) << 16;	//22bit
-			ES_rate += (data[pos+1] )		<< 8;	//22bit
-			ES_rate += (data[pos+2]	& 0xFE) >>1;	//22bit
+			es_rate_  = (data[pos_]	& 0x7F) << 16;	//22bit
+			es_rate_ += (data[pos_+1] )		<< 8;	//22bit
+			es_rate_ += (data[pos_+2]	& 0xFE) >>1;	//22bit
 			PlusDataPosition(3);//+24bit
 		}
 
-		if(DSM_trick_mode_flag)
+		if(dsm_trick_mode_flag_)
 		{
-			trick_mode_control = (data[pos]	& 0xE0) >>5;//3bit
-			if(trick_mode_control == fast_forward){
-				field_id			 = (data[pos]	& 0x18) >>3;//2bit
-				intra_slice_refresh  = (data[pos]	& 0x04) >>2;//1bit
-				frequency_truncation = (data[pos]	& 0x03);	//2bit
+			trick_mode_control_ = (data[pos_]	& 0xE0) >>5;//3bit
+			if(trick_mode_control_ == fast_forward){
+				field_id_			 = (data[pos_]	& 0x18) >>3;//2bit
+				intra_slice_refresh_  = (data[pos_]	& 0x04) >>2;//1bit
+				frequency_truncation_ = (data[pos_]	& 0x03);	//2bit
 			}
-			if(trick_mode_control == slow_motion ){
-				rep_cntrl = (data[pos]	& 0x1F);//5bit
+			if(trick_mode_control_ == slow_motion ){
+				rep_cntrl_ = (data[pos_]	& 0x1F);//5bit
 			}
-			if(trick_mode_control == freeze_frame){
-				field_id			 = (data[pos]	& 0x18) >>3;//2bit
+			if(trick_mode_control_ == freeze_frame){
+				field_id_			 = (data[pos_]	& 0x18) >>3;//2bit
 			}
-			if(trick_mode_control == fast_reverse){
-				field_id			 = (data[pos]	& 0x18) >>3;//2bit
-				intra_slice_refresh  = (data[pos]	& 0x04) >>2;//1bit
-				frequency_truncation = (data[pos]	& 0x03);	//2bit
+			if(trick_mode_control_ == fast_reverse){
+				field_id_			  = (data[pos_]	& 0x18) >>3;//2bit
+				intra_slice_refresh_  = (data[pos_]	& 0x04) >>2;//1bit
+				frequency_truncation_ = (data[pos_]	& 0x03);	//2bit
 			}
-			if(trick_mode_control == slow_reverse){
-				rep_cntrl = (data[pos]	& 0x1F);//5bit
+			if(trick_mode_control_ == slow_reverse){
+				rep_cntrl_ = (data[pos_]	& 0x1F);//5bit
 			}
 			PlusDataPosition(1);//+8bit
 		}
 
-		if(additional_copy_info_flag)
+		if(additional_copy_info_flag_)
 		{
 			//1bit marker
-			additional_copy_info = (data[pos]	& 0x7F);//7bit
+			additional_copy_info_ = (data[pos_]	& 0x7F);//7bit
 			PlusDataPosition(1);//+8bit
 		}
 
-		if(PES_CRC_flag)
+		if(pes_crc_flag_)
 		{
-			previous_PES_packet_CRC = (data[pos]) << 8;
-			previous_PES_packet_CRC = (data[pos+1]) ;
+			previous_pes_packet_crc_ = (data[pos_]) << 8;
+			previous_pes_packet_crc_ = (data[pos_+1]) ;
 			PlusDataPosition(2);//+16bit
 		}
 
-		if(PES_extension_flag)
+		if(pes_extension_flag_)
 		{
-			PES_private_data_flag				= (data[pos] & 0x80	) >>7;//1bit
-			pack_header_field_flag				= (data[pos] & 0x40	) >>6;//1bit
-			program_packet_sequence_counter_flag= (data[pos] & 0x20	) >>5;//1bit
-			P_STD_buffer_flag					= (data[pos] & 0x10	) >>4;//1bit
+			pes_private_data_flag_				= (data[pos_] & 0x80	) >>7;//1bit
+			pack_header_field_flag_				= (data[pos_] & 0x40	) >>6;//1bit
+			program_packet_sequence_counter_flag_= (data[pos_] & 0x20	) >>5;//1bit
+			p_std_buffer_flag_					= (data[pos_] & 0x10	) >>4;//1bit
 			//reserved 3 bslbf
-			PES_extension_flag_2				= (data[pos] & 0x01	)	 ;//1bit
+			pes_extension_flag_2_				= (data[pos_] & 0x01	)	 ;//1bit
 			PlusDataPosition(1);//+8bit
 
-			if(PES_private_data_flag)
+			if(pes_private_data_flag_)
 			{
-				PES_private_data[0]	 = (data[pos  ]) << 56;
-				PES_private_data[0]	+= (data[pos+1]) << 48;
-				PES_private_data[0]	+= (data[pos+2]) << 40;
-				PES_private_data[0]	+= (data[pos+3]) << 32;
-				PES_private_data[0]	+= (data[pos+4]) << 24;
-				PES_private_data[0]	+= (data[pos+5]) << 16;
-				PES_private_data[0]	+= (data[pos+6]) << 8;
-				PES_private_data[0]	+= (data[pos+7]);
+				pes_private_data_[0]	 = (data[pos_ ]) << 56;
+				pes_private_data_[0]	+= (data[pos_+1]) << 48;
+				pes_private_data_[0]	+= (data[pos_+2]) << 40;
+				pes_private_data_[0]	+= (data[pos_+3]) << 32;
+				pes_private_data_[0]	+= (data[pos_+4]) << 24;
+				pes_private_data_[0]	+= (data[pos_+5]) << 16;
+				pes_private_data_[0]	+= (data[pos_+6]) << 8;
+				pes_private_data_[0]	+= (data[pos_+7]);
 
-				PES_private_data[1]	 = (data[pos+8]) << 56;
-				PES_private_data[1]	+= (data[pos+9]) << 48;
-				PES_private_data[1]	+= (data[pos+10]) << 40;
-				PES_private_data[1]	+= (data[pos+11]) << 32;
-				PES_private_data[1]	+= (data[pos+12]) << 24;
-				PES_private_data[1]	+= (data[pos+13]) << 16;
-				PES_private_data[1]	+= (data[pos+14]) << 8;
-				PES_private_data[1]	+= (data[pos+15]);
+				pes_private_data_[1]	 = (data[pos_+8]) << 56;
+				pes_private_data_[1]	+= (data[pos_+9]) << 48;
+				pes_private_data_[1]	+= (data[pos_+10]) << 40;
+				pes_private_data_[1]	+= (data[pos_+11]) << 32;
+				pes_private_data_[1]	+= (data[pos_+12]) << 24;
+				pes_private_data_[1]	+= (data[pos_+13]) << 16;
+				pes_private_data_[1]	+= (data[pos_+14]) << 8;
+				pes_private_data_[1]	+= (data[pos_+15]);
 				PlusDataPosition(16);//+128bit
 			}
-			if(pack_header_field_flag)
+			if(pack_header_field_flag_)
 			{
-				pack_field_length = (data[pos]);
+				pack_field_length_ = (data[pos_]);
 				/////////FIXME
 				//pack_header();
 				PlusDataPosition(1);//+8bit
 			}
-			if(program_packet_sequence_counter_flag)
+			if(program_packet_sequence_counter_flag_)
 			{
 				//1bit marker
-				program_packet_sequence_counter = (data[pos]	& 0x7F);//7bit
+				program_packet_sequence_counter_ = (data[pos_]	& 0x7F);//7bit
 				//1bit marker
-				MPEG1_MPEG2_identifier = (data[pos+1]	& 0x40) >> 6;//1bit
-				original_stuff_length  = (data[pos+1]	& 0x3F);	 //6bit
+				mpeg1_mpeg2_identifier_ = (data[pos_+1]	& 0x40) >> 6;//1bit
+				original_stuff_length_  = (data[pos_+1]	& 0x3F);	 //6bit
 				PlusDataPosition(2);//+16bit
 			}
-			if(P_STD_buffer_flag)
+			if(p_std_buffer_flag_)
 			{
 				//'01'
-				P_STD_buffer_scale  = (data[pos]	& 0x20) >> 5;//1bit
-				P_STD_buffer_size   = (data[pos]	& 0x1F) << 8;//5bit
-				P_STD_buffer_size  += (data[pos+1]	& 0x1F) << 8;//8bit
+				p_std_buffer_scale_  = (data[pos_]	& 0x20) >> 5;//1bit
+				p_std_buffer_size_   = (data[pos_]	& 0x1F) << 8;//5bit
+				p_std_buffer_size_  += (data[pos_+1]	& 0x1F) << 8;//8bit
 				PlusDataPosition(2);//+16bit
 			}
-			if(PES_extension_flag_2)
+			if(pes_extension_flag_2_)
 			{
 				//1bit marker
-				PES_extension_field_length = (data[pos]	& 0x7F);//7bit
-				for(int i=0; i<PES_extension_field_length; i++)
+				pes_extension_field_length_ = (data[pos_]	& 0x7F);//7bit
+				for(int i=0; i<pes_extension_field_length_; i++)
 				{
 					//reserved
 				}
@@ -310,14 +309,14 @@ void  PESPacket::SetHeaderInfo(unsigned char* data)
 		|| id != program_stream_directory
 		|| id != DSMCC_stream
 		|| id != typeE_stream){
-			for(int i=0; i<PES_packet_length; i++)
+			for(int i=0; i<pes_packet_length_; i++)
 			{
 				//PES_packet_data_byte 8bit
 			}
 	}
 	else if(id == padding_stream)
 	{
-		for(int i=0; i<PES_packet_length; i++)
+		for(int i=0; i<pes_packet_length_; i++)
 		{
 			//padding_byte 8bit
 		}
@@ -329,10 +328,10 @@ void PESPacket::PrintPESInfo()
 	if(is_exist_data_){
 	//cout << "packet_start_code_prefix : "	<< packet_start_code_prefix		<< endl;
 	cout<<"\n == PES header fields == "<< endl;
-	cout << "stream_id : "					<< hex << (int)stream_id					<< endl;
-	cout << "PES_packet_length : "			<< dec << (int)PES_packet_length			<< endl;
+	cout << "stream_id : "					<< hex << (int)stream_id_					<< endl;
+	cout << "PES_packet_length : "			<< dec << (int)pes_packet_length_			<< endl;
 		
-	uint8 id = stream_id;
+	uint8 id = stream_id_;
 	if(	   id != program_stream_map
 		&& id != padding_stream
 		&& id != private_stream_2
@@ -342,118 +341,118 @@ void PESPacket::PrintPESInfo()
 		&& id != DSMCC_stream
 		&& id != typeE_stream)
 	{
-		cout << "PES_scrambling_control : "		<< (int)PES_scrambling_control		<< endl;
-		cout << "PES_priority : "				<< PES_priority 				<< endl;
-		cout << "data_alignment_indicator : "	<< data_alignment_indicator		<< endl;
-		cout << "copyright : "					<< copyright					<< endl;
-		cout << "original_or_copy : "			<< original_or_copy				<< endl;
-		if(PTS_DTS_flags == 2)//'10'
+		cout << "PES_scrambling_control : "		<< (int)pes_scrambling_control_		<< endl;
+		cout << "PES_priority : "				<< pes_priority_ 				<< endl;
+		cout << "data_alignment_indicator : "	<< data_alignment_indicator_		<< endl;
+		cout << "copyright : "					<< copyright_					<< endl;
+		cout << "original_or_copy : "			<< original_or_copy_				<< endl;
+		if(pts_dts_flags_ == 2)//'10'
 		{
 			cout << "PTS_flag : "			<< true				<< endl;
 		}
 
-		if(PTS_DTS_flags == 3)//'11'
+		if(pts_dts_flags_ == 3)//'11'
 		{
 			cout << "PTS_flag : "			<< true				<< endl;
 			cout << "DTS_flag : "			<< true				<< endl;			
 		}
-		cout << "ESCR_flag : "					<< ESCR_flag					<< endl;
-		cout << "ES_rate_flag : "				<< ES_rate_flag					<< endl;
-		cout << "DSM_trick_mode_flag : "		<< DSM_trick_mode_flag			<< endl;
-		cout << "additional_copy_info_flag : "	<< additional_copy_info_flag	<< endl;
-		cout << "PES_CRC_flag : "				<< PES_CRC_flag					<< endl;
-		cout << "PES_extension_flag : "			<< PES_extension_flag			<< endl;
-		cout << "PES_header_data_length : "		<< (int)PES_header_data_length		<< endl;
+		cout << "ESCR_flag : "					<< escr_flag_					<< endl;
+		cout << "ES_rate_flag : "				<< es_rate_flag_				<< endl;
+		cout << "DSM_trick_mode_flag : "		<< dsm_trick_mode_flag_			<< endl;
+		cout << "additional_copy_info_flag : "	<< additional_copy_info_flag_	<< endl;
+		cout << "PES_CRC_flag : "				<< pes_crc_flag_				<< endl;
+		cout << "PES_extension_flag : "			<< pes_extension_flag_			<< endl;
+		cout << "PES_header_data_length : "		<< (int)pes_header_data_length_	<< endl;
 		
-		if(PTS_DTS_flags == 2)//'10'
+		if(pts_dts_flags_ == 2)//'10'
 		{
-			cout << "PTS : "			<< 	PTS		<< endl;
+			cout << "PTS : "			<< 	pts_		<< endl;
 		}
 
-		if(PTS_DTS_flags == 3)//'11'
+		if(pts_dts_flags_ == 3)//'11'
 		{
-			cout << "PTS : "			<< 	PTS		<< endl;
-			cout << "DTS : "			<< 	DTS		<< endl;
+			cout << "PTS : "			<< 	pts_		<< endl;
+			cout << "DTS : "			<< 	dts_		<< endl;
 		}
 
-		if(ESCR_flag)//+48bit
+		if(escr_flag_)//+48bit
 		{
-			cout << "ESCR_base : "				<< 	ESCR_base			<< endl;
-			cout << "ESCR_extension : "			<< 	ESCR_extension		<< endl;
+			cout << "ESCR_base : "				<< 	escr_base_			<< endl;
+			cout << "ESCR_extension : "			<< 	escr_extension_		<< endl;
 		}
 
-		if(ES_rate_flag)//+24bit
+		if(es_rate_flag_)//+24bit
 		{
-			cout << "ES_rate : "			<< 	ES_rate		<< endl;			
+			cout << "ES_rate : "			<< 	es_rate_		<< endl;			
 		}
 
-		if(DSM_trick_mode_flag)
+		if(dsm_trick_mode_flag_)
 		{
-			cout << "trick_mode_control : "			<< 	trick_mode_control		<< endl;			
+			cout << "trick_mode_control : "			<< 	trick_mode_control_		<< endl;			
 			 
-			if(trick_mode_control == fast_forward){
-				cout << "field_id : "						<< 	field_id				<< endl;
-				cout << "intra_slice_refresh : "			<< 	intra_slice_refresh		<< endl;
-				cout << "frequency_truncation : "			<< 	frequency_truncation	<< endl;
+			if(trick_mode_control_ == fast_forward){
+				cout << "field_id : "						<< 	field_id_				<< endl;
+				cout << "intra_slice_refresh : "			<< 	intra_slice_refresh_	<< endl;
+				cout << "frequency_truncation : "			<< 	frequency_truncation_	<< endl;
 			}
-			if(trick_mode_control == slow_motion ){
-				cout << "rep_cntrl : "						<< 	rep_cntrl				<< endl;
+			if(trick_mode_control_ == slow_motion ){
+				cout << "rep_cntrl : "						<< 	rep_cntrl_				<< endl;
 			}
-			if(trick_mode_control == freeze_frame){
-				cout << "field_id : "						<< 	field_id				<< endl;
+			if(trick_mode_control_ == freeze_frame){
+				cout << "field_id : "						<< 	field_id_				<< endl;
 			}
-			if(trick_mode_control == fast_reverse){
-				cout << "field_id : "						<< 	field_id				<< endl;
-				cout << "intra_slice_refresh : "			<< 	intra_slice_refresh		<< endl;
-				cout << "frequency_truncation : "			<< 	frequency_truncation	<< endl;
+			if(trick_mode_control_ == fast_reverse){
+				cout << "field_id : "						<< 	field_id_				<< endl;
+				cout << "intra_slice_refresh : "			<< 	intra_slice_refresh_	<< endl;
+				cout << "frequency_truncation : "			<< 	frequency_truncation_	<< endl;
 			}
-			if(trick_mode_control == slow_reverse){
-				cout << "rep_cntrl : "						<< 	rep_cntrl				<< endl;
+			if(trick_mode_control_ == slow_reverse){
+				cout << "rep_cntrl : "						<< 	rep_cntrl_				<< endl;
 			}
 		}
 
-		if(additional_copy_info_flag)
+		if(additional_copy_info_flag_)
 		{
-			cout << "additional_copy_info : "		<< 	additional_copy_info	<< endl;
+			cout << "additional_copy_info : "		<< 	additional_copy_info_	<< endl;
 		}
 
-		if(PES_CRC_flag)
+		if(pes_crc_flag_)
 		{
-			cout << "previous_PES_packet_CRC : "		<< 	previous_PES_packet_CRC	<< endl;			
+			cout << "previous_PES_packet_CRC : "		<< 	previous_pes_packet_crc_	<< endl;			
 		}
 
-		if(PES_extension_flag)
+		if(pes_extension_flag_)
 		{
-			cout << "PES_private_data_flag : "				<< 	PES_private_data_flag	<< endl;			
-			cout << "pack_header_field_flag : "				<< 	pack_header_field_flag	<< endl;			
-			cout << "program_packet_sequence_counter_flag : "<< 	program_packet_sequence_counter_flag	<< endl;			
-			cout << "P_STD_buffer_flag : "					<< 	P_STD_buffer_flag	<< endl;			
-			cout << "PES_extension_flag_2 : "				<< 	PES_extension_flag_2	<< endl;			
-			cout << "PES_private_data_flag : "				<< 	PES_private_data_flag	<< endl;			
+			cout << "PES_private_data_flag : "				<< 	pes_private_data_flag_	<< endl;			
+			cout << "pack_header_field_flag : "				<< 	pack_header_field_flag_	<< endl;			
+			cout << "program_packet_sequence_counter_flag : "<< 	program_packet_sequence_counter_flag_	<< endl;			
+			cout << "P_STD_buffer_flag : "					<< 	p_std_buffer_flag_	<< endl;			
+			cout << "PES_extension_flag_2 : "				<< 	pes_extension_flag_2_	<< endl;			
+			cout << "PES_private_data_flag : "				<< 	pes_private_data_flag_	<< endl;			
 			
-			if(PES_private_data_flag)
+			if(pes_private_data_flag_)
 			{
 				//FIXME
-				cout << "PES_private_data : "		<< 	PES_private_data[0]	<< PES_private_data[1] << endl;
+				cout << "PES_private_data : "		<< 	pes_private_data_[0]	<< pes_private_data_[1] << endl;
 			}
-			if(pack_header_field_flag)
+			if(pack_header_field_flag_)
 			{
-				cout << "pack_field_length : "		<< 	pack_field_length	 << endl;				 
+				cout << "pack_field_length : "		<< 	pack_field_length_	 << endl;				 
 			}
-			if(program_packet_sequence_counter_flag)
+			if(program_packet_sequence_counter_flag_)
 			{
-				cout << "program_packet_sequence_counter : "		<< 	program_packet_sequence_counter	 << endl;
-				cout << "MPEG1_MPEG2_identifier : "		<< 	MPEG1_MPEG2_identifier	 << endl;
-				cout << "original_stuff_length : "		<< 	original_stuff_length	 << endl;
+				cout << "program_packet_sequence_counter : "		<< 	program_packet_sequence_counter_	 << endl;
+				cout << "MPEG1_MPEG2_identifier : "		<< 	mpeg1_mpeg2_identifier_	 << endl;
+				cout << "original_stuff_length : "		<< 	original_stuff_length_	 << endl;
 			}
-			if(P_STD_buffer_flag)
+			if(p_std_buffer_flag_)
 			{
-				cout << "P_STD_buffer_scale : "		<< 	P_STD_buffer_scale	 << endl;
-				cout << "P_STD_buffer_size : "		<< 	P_STD_buffer_size	 << endl;				
+				cout << "P_STD_buffer_scale : "		<< 	p_std_buffer_scale_	 << endl;
+				cout << "P_STD_buffer_size : "		<< 	p_std_buffer_size_	 << endl;				
 			}
-			if(PES_extension_flag_2)
+			if(pes_extension_flag_2_)
 			{
-				cout << "PES_extension_field_length : "		<< 	PES_extension_field_length	 << endl;								
+				cout << "PES_extension_field_length : "		<<  pes_extension_field_length_	 << endl;								
 			}
 		}		
 	}

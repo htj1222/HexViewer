@@ -13,65 +13,65 @@ class PESPacket
 private:
 	bool is_exist_data_;		//데이터 존재 유무 저장
 
-	uint32 packet_start_code_prefix;	//24bit
-	uint8  stream_id;					//8bit
-	uint16 PES_packet_length;			//16bit
+	uint32 packet_start_code_prefix_;	//24bit
+	uint8  stream_id_;					//8bit
+	uint16 pes_packet_length_;			//16bit
 
-	uint8 PES_scrambling_control;//2bit
-	bool PES_priority;//1bit
-	bool data_alignment_indicator;//1bit
-	bool copyright;//1bit
-	bool original_or_copy;//1bit
-	uint8 PTS_DTS_flags;//2bit
-	bool ESCR_flag;//1bit
-	bool ES_rate_flag;//1bit
-	bool DSM_trick_mode_flag;//1bit
-	bool additional_copy_info_flag;//1bit
-	bool PES_CRC_flag;//1bit
-	bool PES_extension_flag;//1bit
-	uint8 PES_header_data_length;//8bit
+	uint8 pes_scrambling_control_;//2bit
+	bool pes_priority_;//1bit
+	bool data_alignment_indicator_;//1bit
+	bool copyright_;//1bit
+	bool original_or_copy_;//1bit
+	uint8 pts_dts_flags_;//2bit
+	bool escr_flag_;//1bit
+	bool es_rate_flag_;//1bit
+	bool dsm_trick_mode_flag_;//1bit
+	bool additional_copy_info_flag_;//1bit
+	bool pes_crc_flag_;//1bit
+	bool pes_extension_flag_;//1bit
+	uint8 pes_header_data_length_;//8bit
 	
-	uint64 PTS;//33bit
-	uint64 DTS;//33bit
+	uint64 pts_;//33bit
+	uint64 dts_;//33bit
 
-	uint64 ESCR_base;//33bit
-	uint16 ESCR_extension;//9bit
+	uint64 escr_base_;//33bit
+	uint16 escr_extension_;//9bit
 
-	uint32 ES_rate;//22bit
+	uint32 es_rate_;//22bit
 
-	uint8 trick_mode_control;//3bit
-	uint8 field_id;//2bit
-	bool intra_slice_refresh;//1bit
-	uint8 frequency_truncation;//2bit
-	uint8 rep_cntrl;//5bit
+	uint8 trick_mode_control_;//3bit
+	uint8 field_id_;//2bit
+	bool intra_slice_refresh_;//1bit
+	uint8 frequency_truncation_;//2bit
+	uint8 rep_cntrl_;//5bit
 	
-	uint8 additional_copy_info;//7bit
+	uint8 additional_copy_info_;//7bit
 
-	uint16 previous_PES_packet_CRC;//16bit
+	uint16 previous_pes_packet_crc_;//16bit
 
-	bool PES_private_data_flag;//1bit
-	bool pack_header_field_flag;//1bit
-	bool program_packet_sequence_counter_flag;//1bit
-	bool P_STD_buffer_flag;//1bit
+	bool pes_private_data_flag_;//1bit
+	bool pack_header_field_flag_;//1bit
+	bool program_packet_sequence_counter_flag_;//1bit
+	bool p_std_buffer_flag_;//1bit
 	//reserved 3 bslbf
-	bool PES_extension_flag_2;//1bit
+	bool pes_extension_flag_2_;//1bit
 
-	uint64 PES_private_data[2];//128bit
+	uint64 pes_private_data_[2];//128bit
 
-	uint8 pack_field_length;//8bit
+	uint8 pack_field_length_;//8bit
 
-	uint8 program_packet_sequence_counter;//7bit
+	uint8 program_packet_sequence_counter_;//7bit
 	//bool marker_bit;//1bit
-	bool MPEG1_MPEG2_identifier;//1bit
-	uint8 original_stuff_length;//6bit
+	bool mpeg1_mpeg2_identifier_;//1bit
+	uint8 original_stuff_length_;//6bit
 
 	//'01' 2 bslbf
-	bool P_STD_buffer_scale;//1bit
-	uint16 P_STD_buffer_size;//13bit
+	bool p_std_buffer_scale_;//1bit
+	uint16 p_std_buffer_size_;//13bit
 
-	uint8 PES_extension_field_length;//7bit
+	uint8 pes_extension_field_length_;//7bit
 
-	int pos;
+	int pos_;
 public:
 	enum TrickModeControl
 	{

@@ -27,7 +27,7 @@ ServerSocket::ServerSocket(void)
 	}
 
 	cout << "================Server================" << endl << "Ip : " << SocketIP << " Port : " << SocketPort << endl;
-	StartServer();
+
 }
 
 void ServerSocket::StartServer()
@@ -111,13 +111,28 @@ unsigned int __stdcall ServerSocket::ThreadFunction(void* arg)
 void ServerSocket::ReadAndWrite(SOCKET clientSocket)
 {
 	char buf[SendBufSize];
-	
-	recv(clientSocket, buf, SendBufSize, 0);
+	char Sendbuf[SendBufSize] = "Test Server -sdj=s ssdd : 123123888";
 
-	cout << buf <<endl;
+	strcat(Sendbuf, "\r\n");
+
+	memset(buf, ' ', SendBufSize); //공백으로 배열초기화	
+	buf[SendBufSize - 1] = '\0';	//NULL추가
+
+	recv(clientSocket, buf, SendBufSize, 0);
+	cout << "recv : " << buf <<endl;
+
+	send(clientSocket, Sendbuf, SendBufSize,0);
+	cout << "send : " << Sendbuf <<endl;
+
+	memset(Sendbuf, ' ', SendBufSize); //공백으로 배열초기화
+	buf[SendBufSize - 1] = '\0';	//NULL추가
+
+	recv(clientSocket, buf, SendBufSize, 0);
+	cout << "recv : " << buf <<endl;
+	/*
 	while(1){
 		send(clientSocket, buf, SendBufSize,0);
-	}
+	}*/
 }
 
 

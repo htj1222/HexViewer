@@ -13,7 +13,7 @@ int _tmain(int argc, const char* argv[])
 {
 	__int64 currentPacket = 0, packetCount = 0;
 	
-	FileDescriptor descriptor;
+	PacketAnalyzer packet_analyzer;
 	
 	char key;
 	int counter;
@@ -26,18 +26,21 @@ int _tmain(int argc, const char* argv[])
     //측정 시작
     startTime=clock();
 	*/
-	packetCount = descriptor.GetPacketCount();	//총 패킷의 수를 구함
-	descriptor.SetPidValueInit();				//pid구분과 cc를 위한 초기화
-	descriptor.Reset();							//값 리셋
+	packetCount = packet_analyzer.GetPacketCount();	//총 패킷의 수를 구함
+	packet_analyzer.SetPidValueInit();				//pid구분과 cc를 위한 초기화
+	packet_analyzer.Reset();							//값 리셋
 
+	ServerSocket server;
+	//server.StartServer();
+	
 	while(1) {
 		system("cls");
 		
-		descriptor.GetPacketData(currentPacket);//데이터 저장
-		descriptor.TSPacketDataAnalysis();		//패킷 분석 시작
-		descriptor.PrintInfo();					//정보출력
-		descriptor.PrintHex();					//hex값 출력
-		descriptor.Reset();						//값 리셋
+		packet_analyzer.GetPacketData(currentPacket);//데이터 저장
+		packet_analyzer.TSPacketDataAnalysis();		//패킷 분석 시작
+		packet_analyzer.PrintInfo();					//정보출력
+		packet_analyzer.PrintHex();					//hex값 출력
+		packet_analyzer.Reset();						//값 리셋
 
 		printf("\nPacket: %I64u/%I64u    1 (이전) 2 (다음) F(찾기) Q (종료)? : ", currentPacket + 1, packetCount);
 		cin >> key;
@@ -64,10 +67,10 @@ int _tmain(int argc, const char* argv[])
 		  counter=1;		  
 		  while(counter != (packetCount-1)){
 			  //cout<<" Packet :"<<counter+2<<" / ";
-			  descriptor.GetPacketData(++counter);//데이터 저장
-			  descriptor.CheckContinuityCounter();
+			  packet_analyzer.GetPacketData(++counter);//데이터 저장
+			  packet_analyzer.CheckContinuityCounter();
 		  }
-		  descriptor.PrintErrorCount();
+		  packet_analyzer.PrintErrorCount();
 
 		  endTime=clock();
 		  printf("측정이 끝났습니다...\n") ;
@@ -77,8 +80,8 @@ int _tmain(int argc, const char* argv[])
 		  printf("측정 시간 : %f 초\n", gap);
 		  //break;
 	  case 'q':
-		  descriptor.Reset();
-		  descriptor.CloseFile();		  
+		  packet_analyzer.Reset();
+		  packet_analyzer.CloseFile();		  
 		  return 0;
 		}
 

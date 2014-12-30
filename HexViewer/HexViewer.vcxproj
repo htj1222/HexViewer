@@ -77,7 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CATPacket.h" />
-    <ClInclude Include="FileDescriptor.h" />
+    <ClInclude Include="PacketAnalyzer.h" />
     <ClInclude Include="HTTPConnect.h" />
     <ClInclude Include="PATPacket.h" />
     <ClInclude Include="PESPacket.h" />
@@ -89,7 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CATPacket.cpp" />
-    <ClCompile Include="FileDescriptor.cpp" />
+    <ClCompile Include="PacketAnalyzer.cpp" />
     <ClCompile Include="HexViewer.cpp" />
     <ClCompile Include="HTTPConnect.cpp" />
     <ClCompile Include="PATPacket.cpp" />

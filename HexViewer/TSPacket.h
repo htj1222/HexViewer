@@ -19,15 +19,14 @@ typedef unsigned long  uint64;
 
 struct ContinuityCounterValue
 {	
-	uint16 PID_;	
+	uint16 pid_;	
 	uint8 last_continuity_counter_;			//4bit
 	bool is_video_;
 };
 
 struct FindSamePID
 {
-
-	bool operator() ( ContinuityCounterValue& value ) const { return value.PID_ == ComparePID; }
+	bool operator() ( ContinuityCounterValue& value ) const { return value.pid_ == ComparePID; }
   	uint16 ComparePID;
 };
 
@@ -42,69 +41,69 @@ private:
 	bool is_exist_data_;		//데이터 존재 유무 저장
 
 	//position
-	int pos;
+	int pos_;
 
 	//Partial Transport Stream Packet Format
-	uint8 syncbyte;						//8bit
-	bool transportErrorIndicator;		//1bit
-	bool payloadUnitStartIndicator;		//1bit
-	bool transportPriorityIndicator;	//1bit
-	uint16 PID;							//13bit
-	uint8 transportScramblingControl;	//2bit
-	uint8 adaptationFieldControl;		//2bit
-	uint8 continuityCounter;			//4bit
+	uint8 sync_byte_;						//8bit
+	bool transport_error_indicator_;		//1bit
+	bool payload_unit_start_indicator_;		//1bit
+	bool transport_priority_indicator_;		//1bit
+	uint16 pid_;							//13bit
+	uint8 transport_scrambling_control_;	//2bit
+	uint8 adaptation_field_control_;		//2bit
+	uint8 continuity_counter_;				//4bit
 
 	//Adaptation Field Format
-	uint8 adaptationFieldLength;			//8bit
-	bool discontinuityIndicator;			//1bit
-	bool randomAccessIndicator;				//1bit
-	bool elementaryStreamPriorityIndicator;	//1bit
-	bool PCRFlag;							//1bit
-	bool OPCRFlag;							//1bit
-	bool splicingPointFlag;					//1bit
-	bool transportPrivateDataFlag;			//1bit
-	bool adaptationFieldExtensionFlag;		//1bit
+	uint8 adaptation_field_length_;			//8bit
+	bool discontinuity_indicator_;			//1bit
+	bool random_access_indicator_;			//1bit
+	bool elementary_stream_priority_indicator_;//1bit
+	bool pcr_flag_;							//1bit
+	bool opcr_flag_;						//1bit
+	bool splicing_point_flag_;				//1bit
+	bool transport_private_data_flag_;		//1bit
+	bool adaptation_field_extension_flag_;	//1bit
 
 	//pcr
-	uint64 programClockReferenceBase;		//33bit
-	uint8  reserved;						//6bit
-	uint64 programClockReferenceExtension;	//9bit
-	uint64 resultPCR;
+	uint64 program_clock_reference_base_;	//33bit
+	uint8  reserved_;						//6bit
+	uint64 program_clock_reference_extension_;//9bit
+	uint64 result_pcr_;
 
 	//opcr
-	uint64 originalProgramClockReferenceBase;		//33bit
-	uint64 originalProgramClockReferenceExtension;	//9bit
-	uint64 resultOPCR;
+	uint64 original_program_clock_reference_base_;		//33bit
+	uint64 original_program_clock_reference_extension_;	//9bit
+	uint64 result_opcr_;
 
 	//spliceCountdown
-	uint8 spliceCountdown;//8bit
+	uint8 splice_countdown_;//8bit
 
 	//privateData
-	uint8 transportPrivateDataLength;//8bit
-	uint8* privateDataByte;			//8*n bit
+	uint8 transport_private_data_length_;//8bit
+	uint8* private_data_byte_;			//8*n bit
 
 	//extension
-	uint8 adaptationFieldExtensionLength;	//8bit
-	bool ltwFlag;							//1bit
-	bool piecewiseRateFlag;					//1bit
-	bool seamlessSpliceFlag;				//1bit
+	uint8 adaptation_field_extension_length_;//8bit
+	bool ltw_flag_;							//1bit
+	bool piecewise_rate_flag_;				//1bit
+	bool seamless_splice_flag_;				//1bit
 	//+5bit reserved
 
 	//ltw
-	bool ltwValidFlag; //1bit
-	uint16 ltwOffset; //15bit
+	bool ltw_valid_flag_; //1bit
+	uint16 ltw_offset_; //15bit
 
 	//piecewise
-	uint32 piecewiseRate;//22bit
+	uint32 piecewise_rate_;//22bit
 
 	//seamless
-	uint8 spliceType;//4bit
-	uint64 DTSNextAU;//36bit
+	uint8 splice_type_;//4bit
+	uint64 dts_next_au_;//36bit
 	
 	list<ContinuityCounterValue> cc_list_;
 	
 public:
-	int cc_error_counter;
+	int cc_error_counter_;
 
 	TSPacket(void);
 	~TSPacket(void);

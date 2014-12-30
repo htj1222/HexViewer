@@ -13,29 +13,29 @@ TSPacket::~TSPacket(void)
 //cc체크, pid구분을 위한 초기화
 void TSPacket::SetPidValueInit(unsigned char* data)
 {
-	cc_error_counter = 0;
+	cc_error_counter_ = 0;
 
     list<ContinuityCounterValue>::iterator list_iter;	//STL의 list
 	list_iter=cc_list_.begin();							//시작을 가리키도록 한다.
 	
-	list<ContinuityCounterValue>::iterator FindPID;//동일한 pid검사용
+	list<ContinuityCounterValue>::iterator find_pid;//동일한 pid검사용
 	
 	//pid값이 같지 않을경우 추가
-	for(int i=0; i<pmt_packet_.streamInfo_size_; i++)
+	for(int i=0; i<pmt_packet_.stream_info_size_; i++)
 	{
 		FindSamePID compare_temp;
-		compare_temp.ComparePID = (int)pmt_packet_.streamInfo[i].elementary_PID;//pid값 저장
-		FindPID = find_if( cc_list_.begin(), cc_list_.end(), compare_temp );	//find_if함수를 사용하여 검색
+		compare_temp.ComparePID = (int)pmt_packet_.stream_info_[i].elementary_pid_;//pid값 저장
+		find_pid = find_if( cc_list_.begin(), cc_list_.end(), compare_temp );	//find_if함수를 사용하여 검색
 
-		if( FindPID != cc_list_.end() )	{
+		if( find_pid != cc_list_.end() )	{
 			cout << "error!!";//같은 값이 있을경우
 		} else{
 			//같은 값이 없을경우 추가
 			ContinuityCounterValue temp;
-			temp.PID_ = compare_temp.ComparePID;
+			temp.pid_ = compare_temp.ComparePID;
 			temp.last_continuity_counter_ = 0;
 
-			if(pmt_packet_.isAudioStreamType(pmt_packet_.streamInfo[i].stream_type)){
+			if(pmt_packet_.isAudioStreamType(pmt_packet_.stream_info_[i].stream_type_)){
 				temp.is_video_ = false;
 			} else{
 				temp.is_video_ = true;
@@ -49,29 +49,29 @@ void TSPacket::SetPidValueInit(unsigned char* data)
 void TSPacket::CheckContinuityCounter(unsigned char* data)
 {
 	ContinuityCounterValue temp;
-	temp.PID_ = ( ( data[1] & 0x1F	)<<8 ) | (data[2]);	
+	temp.pid_ = ( ( data[1] & 0x1F	)<<8 ) | (data[2]);	
 	temp.last_continuity_counter_	= data[3]	 & 0x0F;//4bit
-	adaptationFieldControl			= data[3]>>4 & 0x03;//2bit
+	adaptation_field_control_		= data[3]>>4 & 0x03;//2bit
 
-	if(temp.PID_ != 8191){ //8191 = 1FFF(NULL값)
-		list<ContinuityCounterValue>::iterator FindPID;//검색용 iterator
+	if(temp.pid_ != 8191){ //8191 = 1FFF(NULL값)
+		list<ContinuityCounterValue>::iterator find_pid;//검색용 iterator
 		FindSamePID compare_temp;
-		compare_temp.ComparePID = temp.PID_;
-		FindPID = find_if( cc_list_.begin(), cc_list_.end(), compare_temp );//검색
+		compare_temp.ComparePID = temp.pid_;
+		find_pid = find_if( cc_list_.begin(), cc_list_.end(), compare_temp );//검색
 
-		if( FindPID != cc_list_.end() )  //같은 pid인 경우
+		if( find_pid != cc_list_.end() )  //같은 pid인 경우
 		{	  
-			if( (( (*FindPID).last_continuity_counter_)) == temp.last_continuity_counter_) //현재 cc와 이전의 cc비교
+			if( (( (*find_pid).last_continuity_counter_)) == temp.last_continuity_counter_) //현재 cc와 이전의 cc비교
 			{
-				if(++(*FindPID).last_continuity_counter_ == 16)	{//15이면 0으로 초기화
-					(*FindPID).last_continuity_counter_ = 0;
+				if(++(*find_pid).last_continuity_counter_ == 16)	{//15이면 0으로 초기화
+					(*find_pid).last_continuity_counter_ = 0;
 				}
 				//cout << "same cc:"<<(int)(*FindPID).last_continuity_counter_<<". PID : "<< compare_temp.ComparePID <<endl;
 			}else{
-				if(adaptationFieldControl == 0 | adaptationFieldControl == 2){ //Adaptation field control이 0, 2인 경우 증가X					
+				if(adaptation_field_control_ == 0 || adaptation_field_control_ == 2){ //Adaptation field control이 0, 2인 경우 증가X					
 					//cout << "same (ada : "<<(int)adaptationFieldControl<<") PID : "<< compare_temp.ComparePID <<endl;
 				}else{
-					cc_error_counter++;  //cc 에러!!
+					cc_error_counter_++;  //cc 에러!!
 					//cout << "not same"<<endl;
 				}
 			}
@@ -85,48 +85,48 @@ void TSPacket::CheckContinuityCounter(unsigned char* data)
 void TSPacket::GetHeaderInfo(unsigned char* data)
 {
 	//초기화
-	pos=0;
+	pos_=0;
 
-	syncbyte = data[pos];														//8bit
-	transportErrorIndicator	  = (data[pos+1]>>7		  ) == 1 ? true : false;	//1bit
-	payloadUnitStartIndicator = (data[pos+1]>>6 & 0x01) == 1 ? true : false;	//1bit
-	transportPriorityIndicator= (data[pos+1]>>5 & 0x01) == 1 ? true : false;	//1bit
+	sync_byte_ = data[pos_];														//8bit
+	transport_error_indicator_		= (data[pos_+1]>>7		 ) == 1 ? true : false;	//1bit
+	payload_unit_start_indicator_	= (data[pos_+1]>>6 & 0x01) == 1 ? true : false;	//1bit
+	transport_priority_indicator_	= (data[pos_+1]>>5 & 0x01) == 1 ? true : false;	//1bit
 
-	PID  = ( ( data[pos+1] & 0x1F	)<<8 ) | (data[pos+2]);	
+	pid_  = ( ( data[pos_+1] & 0x1F	)<<8 ) | (data[pos_+2]);	
 
-	transportScramblingControl	= data[pos+3]>>6;		//2bit
-	adaptationFieldControl		= data[pos+3]>>4 & 0x03;//2bit
-	continuityCounter			= data[pos+3]	 & 0x0F;//4bit
+	transport_scrambling_control_	= data[pos_+3]>>6;		//2bit
+	adaptation_field_control_		= data[pos_+3]>>4 & 0x03;//2bit
+	continuity_counter_				= data[pos_+3]	 & 0x0F;//4bit
 
 	PlusDataPosition(4);//32bit
 	
-	if(adaptationFieldControl == 2 || adaptationFieldControl == 3){
-		GetAdaptationField(data, adaptationFieldControl);
+	if(adaptation_field_control_ == 2 || adaptation_field_control_ == 3){
+		GetAdaptationField(data, adaptation_field_control_);
 	}
 
-	if(adaptationFieldControl == '01' || adaptationFieldControl == '11') {
+	if(adaptation_field_control_ == '01' || adaptation_field_control_ == '11') {
 		/*for (i = 0; i < N; i++){
 			data_byte 8 bslbf
 		}*/
 	}
 
-	if(payloadUnitStartIndicator)
+	if(payload_unit_start_indicator_)
 	{
-		if(data[pos] == 0 && data[pos+1] == 0 && data[pos+2] == 1)
+		if(data[pos_] == 0 && data[pos_+1] == 0 && data[pos_+2] == 1)
 		{			
-			pes_packet_.SetPos(pos);
+			pes_packet_.SetPos(pos_);
 			pes_packet_.SetHeaderInfo(data);
-		}else if(data[pos] == 0 && data[pos+1] == 0)
+		}else if(data[pos_] == 0 && data[pos_+1] == 0)
 		{			
-			pat_packet_.SetPos(pos);
+			pat_packet_.SetPos(pos_);
 			pat_packet_.SetHeaderInfo(data);
-		}else if(data[pos] == 0 && data[pos+1] == 1)
+		}else if(data[pos_] == 0 && data[pos_+1] == 1)
 		{
-			cat_packet_.SetPos(pos);
+			cat_packet_.SetPos(pos_);
 			cat_packet_.SetHeaderInfo(data);
-		}else if(data[pos] == 0 && data[pos+1] == 2)
+		}else if(data[pos_] == 0 && data[pos_+1] == 2)
 		{
-			pmt_packet_.SetPos(pos);
+			pmt_packet_.SetPos(pos_);
 			pmt_packet_.SetHeaderInfo(data);
 		}
 	}
@@ -134,143 +134,143 @@ void TSPacket::GetHeaderInfo(unsigned char* data)
 
 void TSPacket::PlusDataPosition(int plus)
 {
-	pos += plus;
+	pos_ += plus;
 }
 
 int  TSPacket::getDataPosition()
 {
-	return pos;
+	return pos_;
 }
 
 void TSPacket::GetAdaptationField(unsigned char* data, unsigned char adaptationFieldControl)
 {
 	is_exist_data_ = true;
 
-	adaptationFieldLength	= data[pos];
+	adaptation_field_length_	= data[pos_];
 	PlusDataPosition(1);//8bit
 
 	//길이가 0이상일 경우
-	if(adaptationFieldLength > 0){
-		discontinuityIndicator				= ((data[pos] & 0x80) >> 7) == 1 ? true : false;
-		randomAccessIndicator				= ((data[pos] & 0x40) >> 6) == 1 ? true : false;
-		elementaryStreamPriorityIndicator	= ((data[pos] & 0x20) >> 5) == 1 ? true : false;
-		PCRFlag								= ((data[pos] & 0x10) >> 4) == 1 ? true : false;
-		OPCRFlag							= ((data[pos] & 0x08) >> 3) == 1 ? true : false;
-		splicingPointFlag					= ((data[pos] & 0x04) >> 2) == 1 ? true : false;
-		transportPrivateDataFlag			= ((data[pos] & 0x02) >> 1) == 1 ? true : false;
-		adaptationFieldExtensionFlag		= ((data[pos] & 0x01)	  ) == 1 ? true : false;
+	if(adaptation_field_length_ > 0){
+		discontinuity_indicator_				= ((data[pos_] & 0x80) >> 7) == 1 ? true : false;
+		random_access_indicator_				= ((data[pos_] & 0x40) >> 6) == 1 ? true : false;
+		elementary_stream_priority_indicator_	= ((data[pos_] & 0x20) >> 5) == 1 ? true : false;
+		pcr_flag_								= ((data[pos_] & 0x10) >> 4) == 1 ? true : false;
+		opcr_flag_								= ((data[pos_] & 0x08) >> 3) == 1 ? true : false;
+		splicing_point_flag_					= ((data[pos_] & 0x04) >> 2) == 1 ? true : false;
+		transport_private_data_flag_			= ((data[pos_] & 0x02) >> 1) == 1 ? true : false;
+		adaptation_field_extension_flag_		= ((data[pos_] & 0x01)	   ) == 1 ? true : false;
 
 		PlusDataPosition(1);//8bit
 
 		//PCR플레그가 1이면 PCR값을 구한다
 		//+48bit (6)
-		if(PCRFlag)
+		if(pcr_flag_)
 		{
-			uint64 tempPCR = 0;
-			tempPCR += data[pos  ] << 25;	//8bit씩 저장//6
-			tempPCR += data[pos+1] << 17;	//8bit씩 저장//7
-			tempPCR += data[pos+2] << 9;	//8bit씩 저장//8
-			tempPCR += data[pos+3] << 1;	//8bit씩 저장//9
-			tempPCR += data[pos+4] >> 7;	//마지막 1bit//10
-			programClockReferenceBase = tempPCR;	//33bit
+			uint64 temp_pcr = 0;
+			temp_pcr += data[pos_  ] << 25;	//8bit씩 저장//6
+			temp_pcr += data[pos_+1] << 17;	//8bit씩 저장//7
+			temp_pcr += data[pos_+2] << 9;	//8bit씩 저장//8
+			temp_pcr += data[pos_+3] << 1;	//8bit씩 저장//9
+			temp_pcr += data[pos_+4] >> 7;	//마지막 1bit//10
+			program_clock_reference_base_ = temp_pcr;	//33bit
 
-			reserved;	//미사용하는 값			//6bit
+			reserved_;	//미사용하는 값			//6bit
 
-			tempPCR = 0;
-			tempPCR += (data[pos+4] & 0x01) << 8;	//상위 1bit저장//10
-			tempPCR += data[pos+5];				//8bit저장//11
-			programClockReferenceExtension = tempPCR;//9bit
+			temp_pcr = 0;
+			temp_pcr += (data[pos_+4] & 0x01) << 8;	//상위 1bit저장//10
+			temp_pcr += data[pos_+5];				//8bit저장//11
+			program_clock_reference_extension_ = temp_pcr;//9bit
 
 			//PCR값 정의 PCR(i) = PCR_base(i) x 300 + PCR_ext(i)에 따라 값 계산후 저장
-			resultPCR = programClockReferenceBase * 300 + programClockReferenceExtension;
+			result_pcr_ = program_clock_reference_base_ * 300 + program_clock_reference_extension_;
 
 			PlusDataPosition(6);//+48bit
 		}
 
 		//OPCR플레그가 1이면 OPCR을 구한다.
 		//+48bit (6)
-		if(OPCRFlag)
+		if(opcr_flag_)
 		{
 			uint64 tempOPCR = 0;
-			tempOPCR += data[pos  ] << 25;	//8bit씩 저장
-			tempOPCR += data[pos+1] << 17;	//8bit씩 저장
-			tempOPCR += data[pos+2] << 9;	//8bit씩 저장
-			tempOPCR += data[pos+3] << 1;	//8bit씩 저장
-			tempOPCR += data[pos+4] >> 7;	//마지막 1bit
-			programClockReferenceBase = tempOPCR;	//33bit
+			tempOPCR += data[pos_  ] << 25;	//8bit씩 저장
+			tempOPCR += data[pos_+1] << 17;	//8bit씩 저장
+			tempOPCR += data[pos_+2] << 9;	//8bit씩 저장
+			tempOPCR += data[pos_+3] << 1;	//8bit씩 저장
+			tempOPCR += data[pos_+4] >> 7;	//마지막 1bit
+			program_clock_reference_base_ = tempOPCR;	//33bit
 
-			reserved;	//미사용하는 값			//6bit
+			reserved_;	//미사용하는 값			//6bit
 
 			tempOPCR = 0;
-			tempOPCR += (data[pos+4] & 0x01) << 8;	//상위 1bit저장
-			tempOPCR += data[pos+5];				//8bit저장
-			programClockReferenceExtension = tempOPCR;//9bit
+			tempOPCR += (data[pos_+4] & 0x01) << 8;	//상위 1bit저장
+			tempOPCR += data[pos_+5];				//8bit저장
+			program_clock_reference_extension_ = tempOPCR;//9bit
 
 			//PCR값 정의 PCR(i) = PCR_base(i) x 300 + PCR_ext(i)에 따라 값 계산후 저장
-			resultOPCR = programClockReferenceBase * 300 + programClockReferenceExtension;
+			result_opcr_ = program_clock_reference_base_ * 300 + program_clock_reference_extension_;
 
 			PlusDataPosition(6);//+48bit
 		}
 
 		//8bit (1)
-		if(splicingPointFlag)
+		if(splicing_point_flag_)
 		{
-			spliceCountdown = data[pos];
+			splice_countdown_ = data[pos_];
 			PlusDataPosition(1);
 		}
 		
 		//8bit+8*nbit
-		if(transportPrivateDataFlag)
+		if(transport_private_data_flag_)
 		{
 			//8bit
-			transportPrivateDataLength = data[pos];
+			transport_private_data_length_ = data[pos_];
 			PlusDataPosition(1);
 			
 			//사이즈 지정하여 생성
-			privateDataByte = (uint8 *) malloc(sizeof(uint8) * transportPrivateDataLength); 
-			for(int i=0; i<transportPrivateDataLength; i++)
+			private_data_byte_ = (uint8 *) malloc(sizeof(uint8) * transport_private_data_length_); 
+			for(int i=0; i<transport_private_data_length_; i++)
 			{
-				privateDataByte[i] = data[pos];
+				private_data_byte_[i] = data[pos_];
 				//8bit씩 증가
 				PlusDataPosition(1);
 			}			
 		}
 
-		if(adaptationFieldExtensionFlag)
+		if(adaptation_field_extension_flag_)
 		{
-			adaptationFieldExtensionLength = data[pos];	//8bit
+			adaptation_field_extension_length_ = data[pos_];	//8bit
 			PlusDataPosition(1);//+8bit
 
-			ltwFlag				= ((data[pos] & 0x80) >> 7) == 1 ? true : false;	//1bit
-			piecewiseRateFlag	= ((data[pos] & 0x40) >> 6) == 1 ? true : false;	//1bit
-			seamlessSpliceFlag	= ((data[pos] & 0x20) >> 5) == 1 ? true : false;	//1bit
+			ltw_flag_				= ((data[pos_] & 0x80) >> 7) == 1 ? true : false;	//1bit
+			piecewise_rate_flag_	= ((data[pos_] & 0x40) >> 6) == 1 ? true : false;	//1bit
+			seamless_splice_flag_	= ((data[pos_] & 0x20) >> 5) == 1 ? true : false;	//1bit
 			PlusDataPosition(1);//5bit reserved + 3bit
 
-			if(ltwFlag)
+			if(ltw_flag_)
 			{
-				ltwValidFlag = ((data[pos] & 0x80) >> 7) == 1 ? true : false;	//1bit
-				ltwOffset  = data[pos  ] & 0x7F << 8;							//15bit
-				ltwOffset += data[pos+1];										//15bit
+				ltw_valid_flag_	= ((data[pos_] & 0x80) >> 7) == 1 ? true : false;	//1bit
+				ltw_offset_		= data[pos_  ] & 0x7F << 8;							//15bit
+				ltw_offset_		+= data[pos_+1];										//15bit
 				PlusDataPosition(2);//16bit
 			}
 
-			if(piecewiseRateFlag)
+			if(piecewise_rate_flag_)
 			{
 				//2bit reserved
-				piecewiseRate  = (data[pos]	& 0x3F) << 16;	//22bit
-				piecewiseRate += (data[pos+1] ) << 8;		//22bit
-				piecewiseRate += (data[pos+2] );			//22bit
+				piecewise_rate_  = (data[pos_]	& 0x3F) << 16;	//22bit
+				piecewise_rate_ += (data[pos_+1] ) << 8;		//22bit
+				piecewise_rate_ += (data[pos_+2] );				//22bit
 				PlusDataPosition(3);//24bit
 			}
 
-			if(seamlessSpliceFlag)
+			if(seamless_splice_flag_)
 			{
-				spliceType = data[pos] >> 4;			//4bit
-				DTSNextAU  = (data[pos]  & 0x0E) << 29;	//3bit
-				DTSNextAU += (data[pos+1]	   ) << 22;	//8bit
-				DTSNextAU += (data[pos+2]& 0x0E) << 14;	//8bit
-				DTSNextAU += (data[pos+3]	   ) << 7;	//8bit
-				DTSNextAU += (data[pos+4]& 0x0E) >> 1;	//8bit
+				splice_type_ = data[pos_] >> 4;			//4bit
+				dts_next_au_  = (data[pos_]  & 0x0E) << 29;	//3bit
+				dts_next_au_ += (data[pos_+1]	   ) << 22;	//8bit
+				dts_next_au_ += (data[pos_+2]& 0x0E) << 14;	//8bit
+				dts_next_au_ += (data[pos_+3]	   ) << 7;	//8bit
+				dts_next_au_ += (data[pos_+4]& 0x0E) >> 1;	//8bit
 				PlusDataPosition(5);//40bit
 			}
 		}
@@ -278,69 +278,69 @@ void TSPacket::GetAdaptationField(unsigned char* data, unsigned char adaptationF
 }
 void TSPacket::Init()
 {
-	syncbyte=0;						//8bit
-	transportErrorIndicator=0;		//1bit
-	payloadUnitStartIndicator=0;	//1bit
-	transportPriorityIndicator=0;	//1bit
-	PID=0;							//13bit
-	transportScramblingControl=0;	//2bit
-	adaptationFieldControl=0;		//2bit
-	continuityCounter=0;			//4bit
+	sync_byte_=0;						//8bit
+	transport_error_indicator_=0;		//1bit
+	payload_unit_start_indicator_=0;	//1bit
+	transport_priority_indicator_=0;	//1bit
+	pid_=0;							//13bit
+	transport_scrambling_control_=0;	//2bit
+	adaptation_field_control_=0;		//2bit
+	continuity_counter_=0;			//4bit
 
-	adaptationFieldLength=0;			//8bit
-	discontinuityIndicator=0;			//1bit
-	randomAccessIndicator=0;			//1bit
-	elementaryStreamPriorityIndicator=0;//1bit
-	PCRFlag=0;							//1bit
-	OPCRFlag=0;							//1bit
-	splicingPointFlag=0;				//1bit
-	transportPrivateDataFlag=0;			//1bit
-	adaptationFieldExtensionFlag=0;		//1bit
+	adaptation_field_length_=0;			//8bit
+	discontinuity_indicator_=0;			//1bit
+	random_access_indicator_=0;			//1bit
+	elementary_stream_priority_indicator_=0;//1bit
+	pcr_flag_=0;							//1bit
+	opcr_flag_=0;							//1bit
+	splicing_point_flag_=0;				//1bit
+	transport_private_data_flag_=0;			//1bit
+	adaptation_field_extension_flag_=0;		//1bit
 
 	//pcr
-	programClockReferenceBase=0;		//33bit
-	reserved=0;							//6bit
-	programClockReferenceExtension=0;	//9bit
-	resultPCR=0;
+	program_clock_reference_base_=0;		//33bit
+	reserved_=0;							//6bit
+	program_clock_reference_extension_=0;	//9bit
+	result_pcr_=0;
 
 	//opcr
-	originalProgramClockReferenceBase=0;		//33bit
-	originalProgramClockReferenceExtension=0;	//9bit
-	resultOPCR=0;
+	original_program_clock_reference_base_=0;		//33bit
+	original_program_clock_reference_extension_=0;	//9bit
+	result_opcr_=0;
 
 	//spliceCountdown
-	spliceCountdown=0;//8bit
+	splice_countdown_=0;//8bit
 
 	//privateData
-	transportPrivateDataLength=0;	//8bit
-	privateDataByte=NULL;			//8*n bit
+	transport_private_data_length_=0;	//8bit
+	private_data_byte_=NULL;			//8*n bit
 
 	//extension
-	adaptationFieldExtensionLength=0;	//8bit
-	ltwFlag=0;							//1bit
-	piecewiseRateFlag=0;				//1bit
-	seamlessSpliceFlag=0;				//1bit
+	adaptation_field_extension_length_=0;	//8bit
+	ltw_flag_=0;							//1bit
+	piecewise_rate_flag_=0;				//1bit
+	seamless_splice_flag_=0;				//1bit
 	//+5bit reserved
 
 	//ltw
-	ltwValidFlag=0; //1bit
-	ltwOffset=0;	//15bit
+	ltw_valid_flag_=0; //1bit
+	ltw_offset_=0;	//15bit
 
 	//piecewise
-	piecewiseRate=0;//22bit
+	piecewise_rate_=0;//22bit
 
 	//seamless
-	spliceType=0;	//4bit
-	DTSNextAU=0;	//36bit
+	splice_type_=0;	//4bit
+	dts_next_au_=0;	//36bit
 
 	is_exist_data_= false;
 }
 
 void TSPacket::Reset()
 {
-	if(transportPrivateDataFlag)
+	if(transport_private_data_flag_)
 	{
-		free(privateDataByte);
+		free(private_data_byte_);
 	}
 	Init();	
 	pes_packet_.Init(); //pes
@@ -352,12 +352,12 @@ void TSPacket::Reset()
 void TSPacket::PrintHeaderInfo()
 {
 	cout<<"\n == Transport packet fields == "<< endl;
-	if(PID != 0){
-		if(PID == 8191){cout<<"  ======= NULL Packet =======" << endl;}else{
+	if(pid_ != 0){
+		if(pid_ == 8191){cout<<"  ======= NULL Packet =======" << endl;}else{
 			list<ContinuityCounterValue>::iterator FindPID;
 
 			FindSamePID compare_temp;
-			compare_temp.ComparePID = PID;		
+			compare_temp.ComparePID = pid_;		
 			FindPID = find_if( cc_list_.begin(), cc_list_.end(), compare_temp );
 
 			if( FindPID != cc_list_.end() )	{
@@ -371,14 +371,14 @@ void TSPacket::PrintHeaderInfo()
 	}else{
 		cout << "" << endl;
 	}
-	cout<<"syncbyte: 0x"				<<	hex << (int)syncbyte			<<endl;
-	cout<<"transportErrorIndicator: "	<<	transportErrorIndicator			<<endl;
-	cout<<"payloadUnitStartIndicator: "	<<	payloadUnitStartIndicator		<<endl;
-	cout<<"transportPriorityIndicator: "<<	transportPriorityIndicator		<<endl;
-	cout<<"PID: "						<<	dec << PID						<<endl;
-	cout<<"transportScramblingControl: "<<	(int)transportScramblingControl	<<endl;
-	cout<<"adaptationFieldControl: "	<<	(int)adaptationFieldControl		<<endl;
-	cout<<"continuityCounter: "			<<	(int)continuityCounter			<<endl<<endl;	
+	cout<<"syncbyte: 0x"				<<	hex << (int)sync_byte_				<<endl;
+	cout<<"transportErrorIndicator: "	<<	transport_error_indicator_			<<endl;
+	cout<<"payloadUnitStartIndicator: "	<<	payload_unit_start_indicator_		<<endl;
+	cout<<"transportPriorityIndicator: "<<	transport_priority_indicator_		<<endl;
+	cout<<"PID: "						<<	dec << pid_							<<endl;
+	cout<<"transportScramblingControl: "<<	(int)transport_scrambling_control_	<<endl;
+	cout<<"adaptationFieldControl: "	<<	(int)adaptation_field_control_		<<endl;
+	cout<<"continuityCounter: "			<<	(int)continuity_counter_			<<endl<<endl;	
 
 	PrintAdaptationInfo();
 	pes_packet_.PrintPESInfo();
@@ -392,60 +392,60 @@ void TSPacket::PrintAdaptationInfo()
 	if(is_exist_data_)
 	{
 	cout<<" == Adaptation fields == "<< endl;
-	cout<<"Adaptation_field_length: "<<	(int)adaptationFieldLength			<<endl;
-	cout<<"discontinuity_indicator: "<<	discontinuityIndicator				<<endl;
-	cout<<"random_access_indicator: "<<	randomAccessIndicator				<<endl;
-	cout<<"ES_priority_indicator: "	<<	elementaryStreamPriorityIndicator	<<endl;
-	cout<<"PCR_flag: "				<<	PCRFlag								<<endl;
-	cout<<"OPCR_flag: "				<<	OPCRFlag							<<endl;
-	cout<<"splicing_point_flag: "	<<	splicingPointFlag					<<endl;
-	cout<<"transport_private_data_flag: "		<<	transportPrivateDataFlag		<<endl;
-	cout<<"adaptation_field_extension_flag: "	<<	adaptationFieldExtensionFlag	<<endl;
+	cout<<"Adaptation_field_length: "<<	(int)adaptation_field_length_				<<endl;
+	cout<<"discontinuity_indicator: "<<	discontinuity_indicator_					<<endl;
+	cout<<"random_access_indicator: "<<	random_access_indicator_					<<endl;
+	cout<<"ES_priority_indicator: "	<<	elementary_stream_priority_indicator_		<<endl;
+	cout<<"PCR_flag: "				<<	pcr_flag_									<<endl;
+	cout<<"OPCR_flag: "				<<	opcr_flag_									<<endl;
+	cout<<"splicing_point_flag: "	<<	splicing_point_flag_						<<endl;
+	cout<<"transport_private_data_flag: "		<<	transport_private_data_flag_	<<endl;
+	cout<<"adaptation_field_extension_flag: "	<<	adaptation_field_extension_flag_<<endl;
 
-	if(PCRFlag){
-		cout<<"PCR : "	<<	resultPCR	<<endl;
+	if(pcr_flag_){
+		cout<<"PCR : "	<<	result_pcr_	<<endl;
 	}
 
-	if(OPCRFlag){
-		cout<<"OPCR : "	<<	resultOPCR	<<endl;
+	if(opcr_flag_){
+		cout<<"OPCR : "	<<	result_opcr_	<<endl;
 	}
 
-	if(splicingPointFlag)
+	if(splicing_point_flag_)
 	{
-		cout<<"spliceCountdown : "	<<	spliceCountdown	<<endl;
+		cout<<"spliceCountdown : "	<<	splice_countdown_	<<endl;
 	}
 
-	if(transportPrivateDataFlag)
+	if(transport_private_data_flag_)
 	{
-		cout<<"transportPrivateDataLength : "	<<	transportPrivateDataLength	<<endl;
-		for(int i=0; i<transportPrivateDataLength; i++)
+		cout<<"transportPrivateDataLength : "	<<	transport_private_data_length_	<<endl;
+		for(int i=0; i<transport_private_data_length_; i++)
 		{
-			cout<<"privateDataByte : "	<<	privateDataByte[i]	<<endl;
+			cout<<"privateDataByte : "	<<	private_data_byte_[i]	<<endl;
 		}	
 	}
 
-	if(adaptationFieldExtensionFlag)
+	if(adaptation_field_extension_flag_)
 	{
-		cout<<"adaptationFieldExtensionLength : "	<<	adaptationFieldExtensionLength	<<endl;
-		cout<<"ltwFlag : "				<<	ltwFlag				<<endl;
-		cout<<"piecewiseRateFlag : "	<<	piecewiseRateFlag	<<endl;
-		cout<<"seamlessSpliceFlag : "	<<	seamlessSpliceFlag	<<endl;
+		cout<<"adaptationFieldExtensionLength : "	<<	adaptation_field_extension_length_	<<endl;
+		cout<<"ltwFlag : "				<<	ltw_flag_				<<endl;
+		cout<<"piecewiseRateFlag : "	<<	piecewise_rate_flag_	<<endl;
+		cout<<"seamlessSpliceFlag : "	<<	seamless_splice_flag_	<<endl;
 
-		if(ltwFlag)
+		if(ltw_flag_)
 		{
-			cout<<"ltwValidFlag : "	<<	ltwValidFlag	<<endl;
-			cout<<"ltwOffset : "	<<	ltwOffset		<<endl;
+			cout<<"ltwValidFlag : "	<<	ltw_valid_flag_	<<endl;
+			cout<<"ltwOffset : "	<<	ltw_offset_		<<endl;
 		}
 
-		if(piecewiseRateFlag)
+		if(piecewise_rate_flag_)
 		{
-			cout<<"piecewiseRate : "	<<	piecewiseRate	<<endl;
+			cout<<"piecewiseRate : "	<<	piecewise_rate_	<<endl;
 		}
 
-		if(seamlessSpliceFlag)
+		if(seamless_splice_flag_)
 		{
-			cout<<"spliceType : "	<<	spliceType	<<endl;
-			cout<<"DTSNextAU : "	<<	DTSNextAU	<<endl;
+			cout<<"spliceType : "	<<	splice_type_	<<endl;
+			cout<<"DTSNextAU : "	<<	dts_next_au_	<<endl;
 		}
 	}
 	cout<<endl;

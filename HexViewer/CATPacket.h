@@ -13,21 +13,21 @@ class CCATPacket
 private:
 	bool is_exist_data_;		//데이터 존재 유무 저장
 
-	int pos;
+	int pos_;
 	
-	uint8 pointer_field;			//8bit
-	uint8 table_id;					//8bit
-	bool section_syntax_indicator;	//1bit
+	uint8 pointer_field_;			//8bit
+	uint8 table_id_;				//8bit
+	bool section_syntax_indicator_;	//1bit
 	//'0' 1 bslbf
 	//reserved 2 bslbf
-	uint16 section_length;			//12bit
+	uint16 section_length_;			//12bit
 	//reserved 18 bslbf
-	uint8 version_number;			//5bit
-	bool current_next_indicator;	//1bit
-	uint8 section_number;			//8bit
-	uint8 last_section_number;		//8bit
+	uint8 version_number_;			//5bit
+	bool current_next_indicator_;	//1bit
+	uint8 section_number_;			//8bit
+	uint8 last_section_number_;		//8bit
 	
-	uint32 CRC_32;					//32bit
+	uint32 crc_32_;					//32bit
 
 
 public:
