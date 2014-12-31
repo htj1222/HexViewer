@@ -110,26 +110,33 @@ unsigned int __stdcall ServerSocket::ThreadFunction(void* arg)
 //쓰레드가 부르는 함수 읽기와 쓰기를 사용
 void ServerSocket::ReadAndWrite(SOCKET clientSocket)
 {
-	char buf[SendBufSize];
-	char Sendbuf[SendBufSize] = "Test Server -sdj=s ssdd : 123123888";
+	char get_bufffer_[SendBufSize];
+	char send_bufffer[SendBufSize] = "";
 
-	strcat(Sendbuf, "\r\n");
+	recv(clientSocket, get_bufffer_, SendBufSize, 0);
+	cout << "recv : " << get_bufffer_ <<endl;
 
-	memset(buf, ' ', SendBufSize); //공백으로 배열초기화	
-	buf[SendBufSize - 1] = '\0';	//NULL추가
+	PacketAnalyzer packet_analyzer;
+	packet_analyzer.SetPrintHexData();
+	//packet_analyzer.PrintHex();
 
-	recv(clientSocket, buf, SendBufSize, 0);
-	cout << "recv : " << buf <<endl;
+	memset(get_bufffer_, ' ', SendBufSize); //공백으로 배열초기화	
+	get_bufffer_[SendBufSize - 1] = '\0';	//NULL추가
+		
+	memset(send_bufffer, ' ', SendBufSize); //공백으로 배열초기화
+	
+	string send_data_temp = packet_analyzer.GetSendBuffer();
+	strcpy(send_bufffer,send_data_temp.c_str());
+	strcat(send_bufffer, "\r\n");
 
-	send(clientSocket, Sendbuf, SendBufSize,0);
-	cout << "send : " << Sendbuf <<endl;
 
-	memset(Sendbuf, ' ', SendBufSize); //공백으로 배열초기화
-	buf[SendBufSize - 1] = '\0';	//NULL추가
+	send(clientSocket, send_bufffer, SendBufSize,0);
+	cout << "send : " << send_bufffer <<endl;
 
-	recv(clientSocket, buf, SendBufSize, 0);
-	cout << "recv : " << buf <<endl;
 	/*
+	recv(clientSocket, get_bufffer_, SendBufSize, 0);
+	cout << "recv : " << get_bufffer_ <<endl;
+	
 	while(1){
 		send(clientSocket, buf, SendBufSize,0);
 	}*/

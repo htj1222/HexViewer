@@ -103,6 +103,7 @@ private:
 	list<ContinuityCounterValue> cc_list_;
 	
 public:
+	string packet_info_buffer_;
 	int cc_error_counter_;
 
 	TSPacket(void);

@@ -5,84 +5,66 @@
 #include <string.h> // memset()
 #include <ctype.h>  // tolower()
 #include <conio.h>  // getch()
+#include <time.h> //clock(), time_t변수
 #include "HTTPConnect.h"
 #include "ServerSocket.h"
-#include <time.h> //clock(), time_t변수
+
 
 int _tmain(int argc, const char* argv[])
 {
-	__int64 currentPacket = 0, packetCount = 0;
-	
 	PacketAnalyzer packet_analyzer;
 	
 	char key;
 	int counter;
-	
-	
+	//시간측정용 변수
 	float gap;
     time_t startTime=0, endTime=0;
+
 	/*
     printf("측정을 시작합니다...\n") ;
     //측정 시작
     startTime=clock();
 	*/
-	packetCount = packet_analyzer.GetPacketCount();	//총 패킷의 수를 구함
-	packet_analyzer.SetPidValueInit();				//pid구분과 cc를 위한 초기화
-	packet_analyzer.Reset();							//값 리셋
 
 	ServerSocket server;
-	//server.StartServer();
+	server.StartServer();
 	
 	while(1) {
 		system("cls");
 		
-		packet_analyzer.GetPacketData(currentPacket);//데이터 저장
 		packet_analyzer.TSPacketDataAnalysis();		//패킷 분석 시작
-		packet_analyzer.PrintInfo();					//정보출력
-		packet_analyzer.PrintHex();					//hex값 출력
-		packet_analyzer.Reset();						//값 리셋
+		packet_analyzer.PrintInfo();				//정보출력		
+		packet_analyzer.Reset();					//값 리셋
 
-		printf("\nPacket: %I64u/%I64u    1 (이전) 2 (다음) F(찾기) Q (종료)? : ", currentPacket + 1, packetCount);
+		printf("\nPacket: %I64u/%I64u    1 (이전) 2 (다음) F(찾기) Q (종료)? : ", packet_analyzer.GetCurrentPacket(), packet_analyzer.GetTotalPacket());
 		cin >> key;
 		
 		switch (tolower(key)) {
-	  case '1':
-		  if (currentPacket > 0) --currentPacket;
-		  break;
-	  case '2':
-		  if (currentPacket+1 < packetCount) ++currentPacket;		  
-		  break;
-	  case 'f':
-		  __int64 temp;
-		  cin >> (__int64)temp;
-		  if(temp >0 && temp <= packetCount)
-			  currentPacket = temp-1;		  
-		  break;
-	  case 'c':
 
-		  printf("측정을 시작합니다...\n") ;
-		  //측정 시작
-		  startTime=clock();
+		case '1':
+			packet_analyzer.GetPreviousPacketData();
+		  break;
 
-		  counter=1;		  
-		  while(counter != (packetCount-1)){
-			  //cout<<" Packet :"<<counter+2<<" / ";
-			  packet_analyzer.GetPacketData(++counter);//데이터 저장
-			  packet_analyzer.CheckContinuityCounter();
-		  }
-		  packet_analyzer.PrintErrorCount();
+		case '2':
+			packet_analyzer.GetNextPacketData();			
+			break;
 
-		  endTime=clock();
-		  printf("측정이 끝났습니다...\n") ;
-		  // 시간 계산
-		  gap=(float)(endTime-startTime)/(CLOCKS_PER_SEC); //계산
-		  // 측정 시간 출력
-		  printf("측정 시간 : %f 초\n", gap);
-		  //break;
-	  case 'q':
-		  packet_analyzer.Reset();
-		  packet_analyzer.CloseFile();		  
-		  return 0;
+		case 'f':
+			__int64 temp;
+			cin >> (__int64)temp;
+			if(temp >0 && temp <= packet_analyzer.GetTotalPacket())
+				packet_analyzer.FindPakcetData(temp);
+			break;
+
+		case 'c':
+			packet_analyzer.CheckContinuityCounter();
+			packet_analyzer.PrintErrorCount();
+			//break;
+
+		case 'q':
+			packet_analyzer.Reset();
+			packet_analyzer.CloseFile();		  
+			return 0;
 		}
 
 	}
