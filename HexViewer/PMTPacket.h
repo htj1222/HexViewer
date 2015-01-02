@@ -51,15 +51,20 @@ public:
 
 	uint32 crc_32_;					//32bit
 
+	string packet_info_buffer_;
 
 	void Init();	
 	void SetPos(int pos);
 	void PlusDataPosition(int plus);
 	void SetHeaderInfo(unsigned char* data);
-	void PrintPMTInfo();
+	void SetPrintPMTInfo();
 	void Reset();
+
+	string GetPacketInfoBuffer();
+
 	bool isAudioStreamType(uint8 stream_type);
 	bool isVideoStreamType(uint8 stream_type);
+
 	PMTPacket(void);
 	~PMTPacket(void);
 };

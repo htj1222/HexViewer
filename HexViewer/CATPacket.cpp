@@ -28,6 +28,8 @@ void CCATPacket::Init()
 	last_section_number_=0;		//8bit
 	
 	crc_32_=0;					//32bit
+
+	packet_info_buffer_ = "";
 }
 
 void CCATPacket::SetPos(int pos_input)
@@ -40,29 +42,36 @@ void CCATPacket::PlusDataPosition(int plus)
 	pos_ += plus;
 }
 
-void CCATPacket::PrintCATInfo()
+void CCATPacket::SetPrintCATInfo()
 {
 	if(is_exist_data_){
-	cout << "== CAT packet fields == "<< endl;
-	cout << "table_id : " << hex <<(int)table_id_ << dec << endl;
-	cout << "section_syntax_indicator : " << section_syntax_indicator_ << endl;
-	cout << "section_length : " << section_length_ << endl;
-	cout << "version_number : " << (int)version_number_ << endl;
-	cout << "current_next_indicator : " << current_next_indicator_ << endl;
-	cout << "section_number : " << (int)section_number_ << endl;
-	cout << "last_section_number : " << (int)last_section_number_ << endl<<endl;
-		
-	int size = (section_length_-9)/4;
-	{
-		for(int i=0; i<size; i++)
+		packet_info_buffer_ += "== CAT packet fields == \n";
+		packet_info_buffer_ +=  "table_id : " +to_string((long long)(int)table_id_ ) +"\n";
+		packet_info_buffer_ +=  "section_syntax_indicator : " + to_string((long long)section_syntax_indicator_ )+"\n";
+		packet_info_buffer_ += "section_length : " + to_string((long long)section_length_ )+"\n";
+		packet_info_buffer_ += "version_number : " + to_string((long long)(int)version_number_ )+"\n";
+		packet_info_buffer_ += "current_next_indicator : " + to_string((long long)current_next_indicator_ )+"\n";
+		packet_info_buffer_ +=  "section_number : " + to_string((long long)(int)section_number_ )+"\n";
+		packet_info_buffer_ += "last_section_number : " + to_string((long long)(int)last_section_number_ )+"\n\n";
+
+		int size = (section_length_-9)/4;
 		{
+			for(int i=0; i<size; i++)
+			{
+			}
 		}
-	}
-	cout << "CRC_32 : " <<hex<< (crc_32_) << dec<< endl<<endl;
-	is_exist_data_ = false;
+		packet_info_buffer_ +=  "CRC_32 : " + to_string((long long)crc_32_ )+"\n\n";
+		is_exist_data_ = false;
+	}else{
+		packet_info_buffer_ = "";
 	}
 }
 
+
+string CCATPacket::GetPacketInfoBuffer()
+{
+	return packet_info_buffer_;
+}
 
 void CCATPacket::SetHeaderInfo(unsigned char* data)
 {

@@ -112,24 +112,44 @@ void ServerSocket::ReadAndWrite(SOCKET clientSocket)
 {
 	char get_bufffer_[SendBufSize];
 	char send_bufffer[SendBufSize] = "";
-
-	recv(clientSocket, get_bufffer_, SendBufSize, 0);
-	cout << "recv : " << get_bufffer_ <<endl;
-
-	PacketAnalyzer packet_analyzer;
-	packet_analyzer.SetPrintHexData();
-	//packet_analyzer.PrintHex();
-
+	char* get_file_name="";
+	__int64 get_packet_num;
+	
 	memset(get_bufffer_, ' ', SendBufSize); //공백으로 배열초기화	
 	get_bufffer_[SendBufSize - 1] = '\0';	//NULL추가
 		
 	memset(send_bufffer, ' ', SendBufSize); //공백으로 배열초기화
+		
+
+	recv(clientSocket, get_bufffer_, SendBufSize, 0);
+	cout << "recv : " << get_bufffer_ <<endl;
+		
+	char delimit_string[] = "/";
+	char *p_token = NULL;
+	p_token = strtok(get_bufffer_, delimit_string);
+	get_file_name = p_token;
+	p_token = strtok(NULL, delimit_string);
+	get_packet_num = atoi(p_token);
 	
-	string send_data_temp = packet_analyzer.GetSendBuffer();
-	strcpy(send_bufffer,send_data_temp.c_str());
-	strcat(send_bufffer, "\r\n");
+	cout << "fileName : "	 << get_file_name << endl;
+	cout << "get_packet_num : " << get_packet_num << endl;
 
+	PacketAnalyzer packet_analyzer(get_file_name);
+	packet_analyzer.FindPakcetData(get_packet_num);
 
+	packet_analyzer.GetPacketData();
+	packet_analyzer.TSPacketDataAnalysis();		//패킷 분석 시작
+	packet_analyzer.SetPrintInfo();				//출력값 저장
+	
+	//packet_analyzer.PrintInfo();				//정보출력		
+	//packet_analyzer.Reset();					//값 리셋
+
+	//packet_analyzer.SetPrintHexData();
+	//packet_analyzer.PrintHex();
+
+	strcpy(send_bufffer,packet_analyzer.GetSendBuffer().c_str());
+	//strcat(send_bufffer, "\r\n");
+	
 	send(clientSocket, send_bufffer, SendBufSize,0);
 	cout << "send : " << send_bufffer <<endl;
 

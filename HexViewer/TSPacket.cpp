@@ -334,6 +334,7 @@ void TSPacket::Init()
 	dts_next_au_=0;	//36bit
 
 	is_exist_data_= false;
+	packet_info_buffer_ = "";
 }
 
 void TSPacket::Reset()
@@ -349,11 +350,11 @@ void TSPacket::Reset()
 	pmt_packet_.Reset(); //pmt
 }
 
-void TSPacket::PrintHeaderInfo()
+void TSPacket::SetPrintHeaderInfo()
 {
-	cout<<"\n == Transport packet fields == "<< endl;
+	packet_info_buffer_ +="  \n == Transport packet fields == \n";
 	if(pid_ != 0){
-		if(pid_ == 8191){cout<<"  ======= NULL Packet =======" << endl;}else{
+		if(pid_ == 8191){packet_info_buffer_ +="    ======= NULL Packet =======\n";}else{
 			list<ContinuityCounterValue>::iterator FindPID;
 
 			FindSamePID compare_temp;
@@ -362,93 +363,112 @@ void TSPacket::PrintHeaderInfo()
 
 			if( FindPID != cc_list_.end() )	{
 				if( (( (*FindPID).is_video_)) == true){
-					cout << "  ======= Video Packet =======" <<endl;
+					packet_info_buffer_ += "  ======= Video Packet =======\n";
 				}else{
-					cout << "  ======= Audio Packet =======" <<endl;
+					packet_info_buffer_ += "  ======= Audio Packet =======\n";
 				}
 			}
 		}
 	}else{
-		cout << "" << endl;
+		packet_info_buffer_ += "\n";
 	}
-	cout<<"syncbyte: 0x"				<<	hex << (int)sync_byte_				<<endl;
-	cout<<"transportErrorIndicator: "	<<	transport_error_indicator_			<<endl;
-	cout<<"payloadUnitStartIndicator: "	<<	payload_unit_start_indicator_		<<endl;
-	cout<<"transportPriorityIndicator: "<<	transport_priority_indicator_		<<endl;
-	cout<<"PID: "						<<	dec << pid_							<<endl;
-	cout<<"transportScramblingControl: "<<	(int)transport_scrambling_control_	<<endl;
-	cout<<"adaptationFieldControl: "	<<	(int)adaptation_field_control_		<<endl;
-	cout<<"continuityCounter: "			<<	(int)continuity_counter_			<<endl<<endl;	
+	packet_info_buffer_ +="  syncbyte: 0x"				+	to_string((long long)(int)sync_byte_)+"\n";	
+	packet_info_buffer_ +="  transportErrorIndicator: "	+	to_string((long long)transport_error_indicator_)			+"\n";	
+	packet_info_buffer_ +="  payloadUnitStartIndicator: "	+	to_string((long long)payload_unit_start_indicator_)		+"\n";
+	packet_info_buffer_ +="  transportPriorityIndicator: "+	to_string((long long)transport_priority_indicator_)		+"\n";
+	packet_info_buffer_ +="  PID: "						+	to_string((long long)pid_)								+"\n";
+	packet_info_buffer_ +="  transportScramblingControl: "+	to_string((long long)(int)transport_scrambling_control_)	+"\n";
+	packet_info_buffer_ +="  adaptationFieldControl: "	+	to_string((long long)(int)adaptation_field_control_)		+"\n";
+	packet_info_buffer_ +="  continuityCounter: "			+	to_string((long long)(int)continuity_counter_)			+"\n\n";	
+		
+	SetPrintAdaptationInfo();
 
-	PrintAdaptationInfo();
-	pes_packet_.PrintPESInfo();
-	pat_packet_.PrintPATInfo();
-	cat_packet_.PrintCATInfo();
-	pmt_packet_.PrintPMTInfo();
+	pes_packet_.SetPrintPESInfo();
+	packet_info_buffer_ += pes_packet_.GetPacketInfoBuffer();
+
+	pat_packet_.SetPrintPATInfo();
+	packet_info_buffer_ += pat_packet_.GetPacketInfoBuffer();
+
+	cat_packet_.SetPrintCATInfo();
+	packet_info_buffer_ += cat_packet_.GetPacketInfoBuffer();
+	
+	pmt_packet_.SetPrintPMTInfo();
+	packet_info_buffer_ += pmt_packet_.GetPacketInfoBuffer();	
 }
 
-void TSPacket::PrintAdaptationInfo()
+string TSPacket::GetPacketInfoBuffer(){
+	return packet_info_buffer_;
+}
+
+void TSPacket::PrintHeaderInfo()
+{
+	char bufffer[2048] = "";
+	strcpy(bufffer,packet_info_buffer_.c_str());
+	cout << bufffer;
+}
+
+void TSPacket::SetPrintAdaptationInfo()
 {	
 	if(is_exist_data_)
 	{
-	cout<<" == Adaptation fields == "<< endl;
-	cout<<"Adaptation_field_length: "<<	(int)adaptation_field_length_				<<endl;
-	cout<<"discontinuity_indicator: "<<	discontinuity_indicator_					<<endl;
-	cout<<"random_access_indicator: "<<	random_access_indicator_					<<endl;
-	cout<<"ES_priority_indicator: "	<<	elementary_stream_priority_indicator_		<<endl;
-	cout<<"PCR_flag: "				<<	pcr_flag_									<<endl;
-	cout<<"OPCR_flag: "				<<	opcr_flag_									<<endl;
-	cout<<"splicing_point_flag: "	<<	splicing_point_flag_						<<endl;
-	cout<<"transport_private_data_flag: "		<<	transport_private_data_flag_	<<endl;
-	cout<<"adaptation_field_extension_flag: "	<<	adaptation_field_extension_flag_<<endl;
+	packet_info_buffer_ +="   == Adaptation fields == \n";
+	packet_info_buffer_ +="  Adaptation_field_length: "	+	to_string((long long)(int)adaptation_field_length_				)+"\n";
+	packet_info_buffer_ +="  discontinuity_indicator: "	+	to_string((long long)discontinuity_indicator_					)+"\n";
+	packet_info_buffer_ +="  random_access_indicator: "	+	to_string((long long)random_access_indicator_					)+"\n";
+	packet_info_buffer_ +="  ES_priority_indicator: "	+	to_string((long long)elementary_stream_priority_indicator_		)+"\n";
+	packet_info_buffer_ +="  PCR_flag: "				+	to_string((long long)pcr_flag_									)+"\n";
+	packet_info_buffer_ +="  OPCR_flag: "				+	to_string((long long)opcr_flag_									)+"\n";
+	packet_info_buffer_ +="  splicing_point_flag: "		+	to_string((long long)splicing_point_flag_						)+"\n";
+	packet_info_buffer_ +="  transport_private_data_flag: "		+	to_string((long long)transport_private_data_flag_	)+"\n";
+	packet_info_buffer_ +="  adaptation_field_extension_flag: "	+	to_string((long long)adaptation_field_extension_flag_)+"\n";
 
 	if(pcr_flag_){
-		cout<<"PCR : "	<<	result_pcr_	<<endl;
+		packet_info_buffer_ +="  PCR : "	+	to_string((long long)result_pcr_	)+"\n";
 	}
 
 	if(opcr_flag_){
-		cout<<"OPCR : "	<<	result_opcr_	<<endl;
+		packet_info_buffer_ +="  OPCR : "	+	to_string((long long)result_opcr_	)+"\n";
 	}
 
 	if(splicing_point_flag_)
 	{
-		cout<<"spliceCountdown : "	<<	splice_countdown_	<<endl;
+		packet_info_buffer_ +="  spliceCountdown : "	+	to_string((long long)splice_countdown_	)+"\n";
 	}
 
 	if(transport_private_data_flag_)
 	{
-		cout<<"transportPrivateDataLength : "	<<	transport_private_data_length_	<<endl;
+		packet_info_buffer_ +="  transportPrivateDataLength : "	+	to_string((long long)transport_private_data_length_	)+"\n";
 		for(int i=0; i<transport_private_data_length_; i++)
 		{
-			cout<<"privateDataByte : "	<<	private_data_byte_[i]	<<endl;
+			packet_info_buffer_ +="  privateDataByte : "	+	to_string((long long)private_data_byte_[i]	)+"\n";
 		}	
 	}
 
 	if(adaptation_field_extension_flag_)
 	{
-		cout<<"adaptationFieldExtensionLength : "	<<	adaptation_field_extension_length_	<<endl;
-		cout<<"ltwFlag : "				<<	ltw_flag_				<<endl;
-		cout<<"piecewiseRateFlag : "	<<	piecewise_rate_flag_	<<endl;
-		cout<<"seamlessSpliceFlag : "	<<	seamless_splice_flag_	<<endl;
+		packet_info_buffer_ +="  adaptationFieldExtensionLength : "	+	to_string((long long)adaptation_field_extension_length_	)+"\n";
+		packet_info_buffer_ +="  ltwFlag : "				+	to_string((long long)ltw_flag_				)+"\n";
+		packet_info_buffer_ +="  piecewiseRateFlag : "	+	to_string((long long)piecewise_rate_flag_	)+"\n";
+		packet_info_buffer_ +="  seamlessSpliceFlag : "	+	to_string((long long)seamless_splice_flag_	)+"\n";
 
 		if(ltw_flag_)
 		{
-			cout<<"ltwValidFlag : "	<<	ltw_valid_flag_	<<endl;
-			cout<<"ltwOffset : "	<<	ltw_offset_		<<endl;
+			packet_info_buffer_ +="  ltwValidFlag : "	+	to_string((long long)ltw_valid_flag_	)+"\n";
+			packet_info_buffer_ +="  ltwOffset : "	+	to_string((long long)ltw_offset_		)+"\n";
 		}
 
 		if(piecewise_rate_flag_)
 		{
-			cout<<"piecewiseRate : "	<<	piecewise_rate_	<<endl;
+			packet_info_buffer_ +="  piecewiseRate : "	+	to_string((long long)piecewise_rate_	)+"\n";
 		}
 
 		if(seamless_splice_flag_)
 		{
-			cout<<"spliceType : "	<<	splice_type_	<<endl;
-			cout<<"DTSNextAU : "	<<	dts_next_au_	<<endl;
+			packet_info_buffer_ +="  spliceType : "	+	to_string((long long)splice_type_	)+"\n";
+			packet_info_buffer_ +="  DTSNextAU : "	+	to_string((long long)dts_next_au_	)+"\n";
 		}
 	}
-	cout<<endl;
+	packet_info_buffer_ +="  \n";
 	is_exist_data_ = false;
 	}
 }

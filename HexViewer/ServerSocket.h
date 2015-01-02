@@ -3,7 +3,7 @@
 #pragma comment(lib,"ws2_32.lib")
 
 using namespace std;
-const int SendBufSize=1024;
+const int SendBufSize=2048;
 
 class ServerSocket
 {

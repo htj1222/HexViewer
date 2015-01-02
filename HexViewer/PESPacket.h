@@ -2,12 +2,6 @@
 #include "StdAfx.h"
 
 
-typedef unsigned char  uint8;
-typedef unsigned short uint16;
-typedef unsigned int   uint32;
-typedef unsigned long  uint64;
-
-
 class PESPacket
 {
 private:
@@ -70,8 +64,10 @@ private:
 	uint16 p_std_buffer_size_;//13bit
 
 	uint8 pes_extension_field_length_;//7bit
-
+		
 	int pos_;
+
+	string packet_info_buffer_;
 public:
 	enum TrickModeControl
 	{
@@ -113,7 +109,10 @@ public:
 	void SetHeaderInfo(unsigned char* data);
 	void PlusDataPosition(int plus);
 
+	void SetPrintPESInfo();
 	void PrintPESInfo();
+
+	string GetPacketInfoBuffer();
 
 	PESPacket(void);
 	~PESPacket(void);

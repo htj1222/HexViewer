@@ -18,13 +18,9 @@
 
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
-#include "PacketAnalyzer.h"
-#include "TSPacket.h"
-#include "PESPacket.h"
-#include "PATPacket.h"
-#include "CATPacket.h"
-#include "PMTPacket.h"
 #include <iostream>
+#include <string>
+
 
 
 typedef unsigned char  uint8;
@@ -33,3 +29,10 @@ typedef unsigned int   uint32;
 typedef unsigned long  uint64;
 
 using namespace std;
+
+#include "PacketAnalyzer.h"
+#include "TSPacket.h"
+#include "PESPacket.h"
+#include "PATPacket.h"
+#include "CATPacket.h"
+#include "PMTPacket.h"

@@ -39,13 +39,18 @@ private:
 	PIDinfo* pid_info_;
 
 	uint32 crc_32_;					//32bit
+
+	string packet_info_buffer_;
+
 public:
 	void Init();	
 	void SetPos(int pos);
 	void PlusDataPosition(int plus);
 	void SetHeaderInfo(unsigned char* data);
-	void PrintPATInfo();
+	void SetPrintPATInfo();
 	void Reset();
+
+	string GetPacketInfoBuffer();
 
 	PATPacket(void);
 	~PATPacket(void);

@@ -12,7 +12,7 @@
 
 int _tmain(int argc, const char* argv[])
 {
-	PacketAnalyzer packet_analyzer;
+	PacketAnalyzer packet_analyzer("data\\notake.mpg");
 	
 	char key;
 	int counter;
@@ -31,12 +31,14 @@ int _tmain(int argc, const char* argv[])
 	
 	while(1) {
 		system("cls");
-		
+
+		packet_analyzer.GetPacketData();
 		packet_analyzer.TSPacketDataAnalysis();		//패킷 분석 시작
+		packet_analyzer.SetPrintInfo();				//출력값 저장
 		packet_analyzer.PrintInfo();				//정보출력		
 		packet_analyzer.Reset();					//값 리셋
 
-		printf("\nPacket: %I64u/%I64u    1 (이전) 2 (다음) F(찾기) Q (종료)? : ", packet_analyzer.GetCurrentPacket(), packet_analyzer.GetTotalPacket());
+		printf("\nPacket: %I64u/%I64u    1 (이전) 2 (다음) F(찾기) Q (종료)? : ", packet_analyzer.GetCurrentPacket()+1, packet_analyzer.GetTotalPacket());
 		cin >> key;
 		
 		switch (tolower(key)) {
@@ -52,8 +54,8 @@ int _tmain(int argc, const char* argv[])
 		case 'f':
 			__int64 temp;
 			cin >> (__int64)temp;
-			if(temp >0 && temp <= packet_analyzer.GetTotalPacket())
-				packet_analyzer.FindPakcetData(temp);
+			if(temp >0 && (temp) <= packet_analyzer.GetTotalPacket())
+				packet_analyzer.FindPakcetData(temp-1);
 			break;
 
 		case 'c':

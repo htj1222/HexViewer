@@ -50,6 +50,8 @@ void PMTPacket::Init()
 	stream_info_size_ = 0;
 
 	crc_32_ = 0;					//32bit
+
+	packet_info_buffer_="";
 }
 
 void PMTPacket::SetPos(int pos_input)
@@ -93,38 +95,45 @@ bool PMTPacket::isVideoStreamType(uint8 stream_type)
 	}
 }
 
-void PMTPacket::PrintPMTInfo()
+string PMTPacket::GetPacketInfoBuffer()
+{
+	return packet_info_buffer_;
+}
+
+void PMTPacket::SetPrintPMTInfo()
 {
 	if(is_exist_data_){
-	cout << "== PMT packet fields == "<< endl;
-	cout << "table_id : "					<< hex <<(int)table_id_ << dec		<< endl;
-	cout << "section_syntax_indicator : "	<< section_syntax_indicator_			<< endl;
-	cout << "section_length : "				<< (int)section_length_				<< endl;
-	cout << "program_number : "				<< (int)program_number_				<< endl;
-	cout << "version_number : "				<< (int)version_number_				<< endl;
-	cout << "current_next_indicator : "		<< current_next_indicator_			<< endl;
-	cout << "section_number : "				<< (int)section_number_				<< endl;
-	cout << "last_section_number : "		<< (int)last_section_number_			<< endl<<endl;
-	
-	cout << "PCR_PID : "					<< (int)pcr_pid_						<< endl;
-	cout << "program_info_length : "		<< (int)program_info_length_			<< endl << endl;
-		
-	for(int i=0; i<stream_info_size_; i++)
-	{
-		cout << "stream_type : "				<< (int)stream_info_[i].stream_type_;
-		if(isAudioStreamType(stream_info_[i].stream_type_)){
-			cout << "(is Audio Stream)"			<<endl;
+		packet_info_buffer_ += "== PMT packet fields == \n";
+		packet_info_buffer_ += "table_id : "					+ to_string((long long)(int)table_id_ 					)+"\n";
+		packet_info_buffer_ += "section_syntax_indicator : "	+ to_string((long long)section_syntax_indicator_		)+"\n";
+		packet_info_buffer_ += "section_length : "				+ to_string((long long)(int)section_length_				)+"\n";
+		packet_info_buffer_ += "program_number : "				+ to_string((long long)(int)program_number_				)+"\n";
+		packet_info_buffer_ += "version_number : "				+ to_string((long long)(int)version_number_				)+"\n";
+		packet_info_buffer_ += "current_next_indicator : "		+ to_string((long long)current_next_indicator_			)+"\n";
+		packet_info_buffer_ += "section_number : "				+ to_string((long long)(int)section_number_				)+"\n";
+		packet_info_buffer_ += "last_section_number : "			+ to_string((long long)(int)last_section_number_		)+"\n\n";
+
+		packet_info_buffer_ += "PCR_PID : "					+ to_string((long long)(int)pcr_pid_						)+"\n";
+		packet_info_buffer_ += "program_info_length : "		+ to_string((long long)(int)program_info_length_			)+"\n\n";
+
+		for(int i=0; i<stream_info_size_; i++)
+		{
+			packet_info_buffer_ += "stream_type : "				+ to_string((long long)(int)stream_info_[i].stream_type_);
+			if(isAudioStreamType(stream_info_[i].stream_type_)){
+				packet_info_buffer_ += "(is Audio Stream)\n";
+			}
+			else if(isVideoStreamType(stream_info_[i].stream_type_)){
+				packet_info_buffer_ += "(is Video Stream)\n";
+			}else{
+				packet_info_buffer_ += "(?)\n";
+			}
+			packet_info_buffer_ += "elementary_PID : "				+ to_string((long long)(int)stream_info_[i].elementary_pid_		 )+"\n";
+			packet_info_buffer_ += "ES_info_length : "				+ to_string((long long)(int)stream_info_[i].es_info_length_		 )+"\n\n";				
 		}
-		else if(isVideoStreamType(stream_info_[i].stream_type_)){
-			cout << "(is Video Stream)"			<<endl;
-		}else{
-			cout << "(?)"			<<endl;
-		}
-		cout << "elementary_PID : "				<< (int)stream_info_[i].elementary_pid_		 <<endl;
-		cout << "ES_info_length : "				<< (int)stream_info_[i].es_info_length_		 <<endl<<endl;				
-	}
-	cout << "CRC_32 : " <<hex<< (crc_32_) << dec<< endl<<endl;
-	is_exist_data_ = false;
+		packet_info_buffer_ += "CRC_32 : " +to_string((long long)(crc_32_) )+"\n\n";
+		is_exist_data_ = false;
+	}else{
+		packet_info_buffer_ = "";
 	}
 }
 

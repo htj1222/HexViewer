@@ -1,9 +1,9 @@
 #include "StdAfx.h"
 
-PacketAnalyzer::PacketAnalyzer(void)
+PacketAnalyzer::PacketAnalyzer(char* file_name)
 {
 	//file_name_ = "TEST150_ASSET11.mpg";
-	file_name_ = "data\\notake.mpg";
+	file_name_ = file_name;
 	FileOpen(file_name_);			//파일 오픈
 	SetTotalPacket();				//총 패킷수를 설정
 	SetPidValueInit();				//pid구분과 cc를 위한 초기화
@@ -37,17 +37,15 @@ __int64 PacketAnalyzer::GetFileSize() {
 
 //사이즈를 구하고 패킷단위로 나눈다
 void PacketAnalyzer::SetTotalPacket() {
-	//초기화
-	current_packet_ = 0;
 	total_packet_ = 0;
 
 	long long fileSize = GetFileSize();
 	total_packet_ = (__int64) ceil(fileSize / (double)(PACKET_SIZE));	//총 패킷의 수를 구함
 }
 
-__int64 PacketAnalyzer::GetCurrentPacket(){return current_packet_;}
-__int64 PacketAnalyzer::GetTotalPacket(){return total_packet_;}
-string  PacketAnalyzer::GetSendBuffer(){return send_buffer_;}
+__int64 PacketAnalyzer::GetCurrentPacket()	{return current_packet_;}
+__int64 PacketAnalyzer::GetTotalPacket()	{return total_packet_;	}
+string  PacketAnalyzer::GetSendBuffer()		{return send_buffer_;	}
 
 void PacketAnalyzer::FindPakcetData(__int64 num)
 {
@@ -61,26 +59,25 @@ void PacketAnalyzer::GetPacketData()
 	fseek(p_file_, current_packet_ * PACKET_SIZE, 0);
 
 	//패킷사이즈만큼 데이터를 받아서 넣는다.
-	fread(packet_data_, 1, PACKET_SIZE , p_file_);
+	fread(packet_data_, PACKET_SIZE, 1, p_file_);
 }
 
 //다음 패킷데이터
 void PacketAnalyzer::GetNextPacketData()
 {
-	if (current_packet_+1 < total_packet_){
+	if (current_packet_+1 < total_packet_){		
 		++current_packet_;
-		GetPacketData();
 	}
 }
 
 //이전 패킷데이터 
 void PacketAnalyzer::GetPreviousPacketData()
 {
-	if (current_packet_ > 0){
+	if ((current_packet_) > 0){
 		--current_packet_;
-		GetPacketData();		
 	}
 }
+
 
 void PacketAnalyzer::TSPacketDataAnalysis()
 {
@@ -101,6 +98,9 @@ void PacketAnalyzer::SetPidValueInit()
 	TSPacketDataAnalysis();			//패킷 분석 시작
 	ts_packet_.SetPidValueInit(packet_data_);
 	Reset();						//값 리셋
+
+	//초기화
+	current_packet_ = 0;
 }
 
 //cc체크
@@ -118,11 +118,20 @@ void PacketAnalyzer::PrintErrorCount()
 	cout << "error(" <<  ts_packet_.cc_error_counter_ << ")" << endl;
 }
 
+//출력정보 저장
+void PacketAnalyzer::SetPrintInfo() 
+{	
+	ts_packet_.SetPrintHeaderInfo();
+	SetPrintHexData();
+
+	send_buffer_ = ts_packet_.GetPacketInfoBuffer() + hex_data_buffer_;
+}
+
+
 //출력
 void PacketAnalyzer::PrintInfo() 
 {	
 	ts_packet_.PrintHeaderInfo();
-	SetPrintHexData();
 	PrintHex();
 }
 
@@ -131,7 +140,7 @@ void PacketAnalyzer::SetPrintHexData() {
 	unsigned hexIndex = 0, printablesIndex = 0, readBytes = 0;
 	char currentLine[CONSOLE_COLS];
 	
-	send_buffer_ = "";
+	hex_data_buffer_ = "";
 
 	//출력할 라인을 초기화
 	memset(currentLine, ' ', CONSOLE_COLS); //공백으로 배열초기화
@@ -161,8 +170,8 @@ void PacketAnalyzer::SetPrintHexData() {
 		if (printablesIndex == 16 || c == EOF || i == (PACKET_SIZE-1)) {
 			//출력
 			//puts(currentLine);
-			send_buffer_ += currentLine;
-			send_buffer_ += "\n";
+			hex_data_buffer_ += currentLine;
+			hex_data_buffer_ += "\n";
 
 			//마지막이라면 끝
 			if (c == EOF)
@@ -181,7 +190,6 @@ void PacketAnalyzer::SetPrintHexData() {
 
 void PacketAnalyzer::PrintHex() {
 	char bufffer[1024] = "";
-	string send_data_temp = GetSendBuffer();
-	strcpy(bufffer,send_data_temp.c_str());
+	strcpy(bufffer,hex_data_buffer_.c_str());
 	cout << bufffer;
 }

@@ -1,4 +1,3 @@
-
 #pragma once
 #include "StdAfx.h"
 #include "PESPacket.h"
@@ -9,13 +8,6 @@
 #include <list>
 #include <iostream>
 #include <algorithm> //find()를 위해 필요 
-
-using namespace std;
-
-typedef unsigned char  uint8;
-typedef unsigned short uint16;
-typedef unsigned int   uint32;
-typedef unsigned long  uint64;
 
 struct ContinuityCounterValue
 {	
@@ -101,9 +93,10 @@ private:
 	uint64 dts_next_au_;//36bit
 	
 	list<ContinuityCounterValue> cc_list_;
-	
-public:
+
 	string packet_info_buffer_;
+public:
+	
 	int cc_error_counter_;
 
 	TSPacket(void);
@@ -117,8 +110,12 @@ public:
 	void PlusDataPosition(int plus);
 	void GetAdaptationField(unsigned char* data, unsigned char adaptationFieldControl);
 
+	void SetPrintHeaderInfo();
 	void PrintHeaderInfo();
+	void SetPrintAdaptationInfo();
 	void PrintAdaptationInfo();
+
+	string GetPacketInfoBuffer();
 	
 	void CheckContinuityCounter(unsigned char* data);
 

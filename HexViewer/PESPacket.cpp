@@ -77,6 +77,8 @@ void PESPacket::Init()
 	p_std_buffer_size_ = 0;//13bit
 
 	pes_extension_field_length_ = 0;//7bit
+
+	packet_info_buffer_ = "";
 }
 
 void PESPacket::PlusDataPosition(int plus)
@@ -323,140 +325,153 @@ void  PESPacket::SetHeaderInfo(unsigned char* data)
 	}	
 }
 
+string PESPacket::GetPacketInfoBuffer()
+{
+	return packet_info_buffer_;
+}
+
+void PESPacket::SetPrintPESInfo(){
+	if(is_exist_data_){
+		//packet_info_buffer_ += "packet_start_code_prefix : "	+ packet_start_code_prefix		+"\n";
+		packet_info_buffer_ +="\n == PES header fields == \n";
+		packet_info_buffer_ += "stream_id : "					+ to_string((long long)(int)stream_id_					)+"\n";
+		packet_info_buffer_ += "PES_packet_length : "			+ to_string((long long)(int)pes_packet_length_			)+"\n";
+
+		uint8 id = stream_id_;
+		if(	   id != program_stream_map
+			&& id != padding_stream
+			&& id != private_stream_2
+			&& id != ECM_stream
+			&& id != EMM_stream
+			&& id != program_stream_directory
+			&& id != DSMCC_stream
+			&& id != typeE_stream)
+		{
+			packet_info_buffer_ += "PES_scrambling_control : "		+ to_string((long long)(int)pes_scrambling_control_		)+"\n";
+			packet_info_buffer_ += "PES_priority : "				+ to_string((long long)pes_priority_ 					)+"\n";
+			packet_info_buffer_ += "data_alignment_indicator : "	+ to_string((long long)data_alignment_indicator_		)+"\n";
+			packet_info_buffer_ += "copyright : "					+ to_string((long long)copyright_						)+"\n";
+			packet_info_buffer_ += "original_or_copy : "			+ to_string((long long)original_or_copy_				)+"\n";
+			if(pts_dts_flags_ == 2)//'10'
+			{
+				packet_info_buffer_ += "PTS_flag : true\n";
+			}
+
+			if(pts_dts_flags_ == 3)//'11'
+			{
+				packet_info_buffer_ += "PTS_flag : true				\n";
+				packet_info_buffer_ += "DTS_flag : true				\n";			
+			}
+			packet_info_buffer_ += "ESCR_flag : "					+ to_string((long long)escr_flag_					)+"\n";
+			packet_info_buffer_ += "ES_rate_flag : "				+ to_string((long long)es_rate_flag_				)+"\n";
+			packet_info_buffer_ += "DSM_trick_mode_flag : "			+ to_string((long long)dsm_trick_mode_flag_			)+"\n";
+			packet_info_buffer_ += "additional_copy_info_flag : "	+ to_string((long long)additional_copy_info_flag_	)+"\n";
+			packet_info_buffer_ += "PES_CRC_flag : "				+ to_string((long long)pes_crc_flag_				)+"\n";
+			packet_info_buffer_ += "PES_extension_flag : "			+ to_string((long long)pes_extension_flag_			)+"\n";
+			packet_info_buffer_ += "PES_header_data_length : "		+ to_string((long long)(int)pes_header_data_length_	)+"\n";
+
+			if(pts_dts_flags_ == 2)//'10'
+			{
+				packet_info_buffer_ += "PTS : "			+ 	to_string((long long)pts_		)+"\n";
+			}
+
+			if(pts_dts_flags_ == 3)//'11'
+			{
+				packet_info_buffer_ += "PTS : "			+ 	to_string((long long)pts_		)+"\n";
+				packet_info_buffer_ += "DTS : "			+ 	to_string((long long)dts_		)+"\n";
+			}
+
+			if(escr_flag_)//+48bit
+			{
+				packet_info_buffer_ += "ESCR_base : "				+ 	to_string((long long)escr_base_				)+"\n";
+				packet_info_buffer_ += "ESCR_extension : "			+ 	to_string((long long)escr_extension_		)+"\n";
+			}
+
+			if(es_rate_flag_)//+24bit
+			{
+				packet_info_buffer_ += "ES_rate : "			+ 	to_string((long long)es_rate_		)+"\n";			
+			}
+
+			if(dsm_trick_mode_flag_)
+			{
+				packet_info_buffer_ += "trick_mode_control : "			+ 	to_string((long long)trick_mode_control_		)+"\n";			
+
+				if(trick_mode_control_ == fast_forward){
+					packet_info_buffer_ += "field_id : "						+ 	to_string((long long)field_id_				)+"\n";
+					packet_info_buffer_ += "intra_slice_refresh : "				+ 	to_string((long long)intra_slice_refresh_	)+"\n";
+					packet_info_buffer_ += "frequency_truncation : "			+ 	to_string((long long)frequency_truncation_	)+"\n";
+				}
+				if(trick_mode_control_ == slow_motion ){
+					packet_info_buffer_ += "rep_cntrl : "						+ 	to_string((long long)rep_cntrl_				)+"\n";
+				}
+				if(trick_mode_control_ == freeze_frame){
+					packet_info_buffer_ += "field_id : "						+ 	to_string((long long)field_id_				)+"\n";
+				}
+				if(trick_mode_control_ == fast_reverse){
+					packet_info_buffer_ += "field_id : "						+ 	to_string((long long)field_id_				)+"\n";
+					packet_info_buffer_ += "intra_slice_refresh : "				+ 	to_string((long long)intra_slice_refresh_	)+"\n";
+					packet_info_buffer_ += "frequency_truncation : "			+ 	to_string((long long)frequency_truncation_	)+"\n";
+				}
+				if(trick_mode_control_ == slow_reverse){
+					packet_info_buffer_ += "rep_cntrl : "						+ 	to_string((long long)rep_cntrl_				)+"\n";
+				}
+			}
+
+			if(additional_copy_info_flag_)
+			{
+				packet_info_buffer_ += "additional_copy_info : "		+ 	to_string((long long)additional_copy_info_	)+"\n";
+			}
+
+			if(pes_crc_flag_)
+			{
+				packet_info_buffer_ += "previous_PES_packet_CRC : "		+ 	to_string((long long)previous_pes_packet_crc_	)+"\n";			
+			}
+
+			if(pes_extension_flag_)
+			{
+				packet_info_buffer_ += "PES_private_data_flag : "				+ 	to_string((long long)pes_private_data_flag_	)+"\n";			
+				packet_info_buffer_ += "pack_header_field_flag : "				+ 	to_string((long long)pack_header_field_flag_	)+"\n";			
+				packet_info_buffer_ += "program_packet_sequence_counter_flag : "+ 	to_string((long long)program_packet_sequence_counter_flag_	)+"\n";			
+				packet_info_buffer_ += "P_STD_buffer_flag : "					+ 	to_string((long long)p_std_buffer_flag_	)+"\n";			
+				packet_info_buffer_ += "PES_extension_flag_2 : "				+ 	to_string((long long)pes_extension_flag_2_	)+"\n";			
+				packet_info_buffer_ += "PES_private_data_flag : "				+ 	to_string((long long)pes_private_data_flag_	)+"\n";			
+
+				if(pes_private_data_flag_)
+				{
+					//FIXME
+					packet_info_buffer_ += "PES_private_data : "		+ 	to_string((long long)pes_private_data_[0]	)+ to_string((long long)pes_private_data_[1]) +"\n";
+				}
+				if(pack_header_field_flag_)
+				{
+					packet_info_buffer_ += "pack_field_length : "		+ 	to_string((long long)pack_field_length_	 )+"\n";				 
+				}
+				if(program_packet_sequence_counter_flag_)
+				{
+					packet_info_buffer_ += "program_packet_sequence_counter : "		+ 	to_string((long long)program_packet_sequence_counter_	 )+"\n";
+					packet_info_buffer_ += "MPEG1_MPEG2_identifier : "				+ 	to_string((long long)mpeg1_mpeg2_identifier_			 )+"\n";
+					packet_info_buffer_ += "original_stuff_length : "				+ 	to_string((long long)original_stuff_length_				)+"\n";
+				}
+				if(p_std_buffer_flag_)
+				{
+					packet_info_buffer_ += "P_STD_buffer_scale : "		+ 	to_string((long long)p_std_buffer_scale_	)+"\n";
+					packet_info_buffer_ += "P_STD_buffer_size : "		+ 	to_string((long long)p_std_buffer_size_		)+"\n";				
+				}
+				if(pes_extension_flag_2_)
+				{
+					packet_info_buffer_ += "PES_extension_field_length : "		+  to_string((long long)pes_extension_field_length_	 )+"\n";								
+				}
+			}		
+		}
+		packet_info_buffer_ += "\n";
+		is_exist_data_ = false;
+	}else{
+		packet_info_buffer_ = "";
+	}
+}
+
 void PESPacket::PrintPESInfo()
 {
-	if(is_exist_data_){
-	//cout << "packet_start_code_prefix : "	<< packet_start_code_prefix		<< endl;
-	cout<<"\n == PES header fields == "<< endl;
-	cout << "stream_id : "					<< hex << (int)stream_id_					<< endl;
-	cout << "PES_packet_length : "			<< dec << (int)pes_packet_length_			<< endl;
-		
-	uint8 id = stream_id_;
-	if(	   id != program_stream_map
-		&& id != padding_stream
-		&& id != private_stream_2
-		&& id != ECM_stream
-		&& id != EMM_stream
-		&& id != program_stream_directory
-		&& id != DSMCC_stream
-		&& id != typeE_stream)
-	{
-		cout << "PES_scrambling_control : "		<< (int)pes_scrambling_control_		<< endl;
-		cout << "PES_priority : "				<< pes_priority_ 				<< endl;
-		cout << "data_alignment_indicator : "	<< data_alignment_indicator_		<< endl;
-		cout << "copyright : "					<< copyright_					<< endl;
-		cout << "original_or_copy : "			<< original_or_copy_				<< endl;
-		if(pts_dts_flags_ == 2)//'10'
-		{
-			cout << "PTS_flag : "			<< true				<< endl;
-		}
-
-		if(pts_dts_flags_ == 3)//'11'
-		{
-			cout << "PTS_flag : "			<< true				<< endl;
-			cout << "DTS_flag : "			<< true				<< endl;			
-		}
-		cout << "ESCR_flag : "					<< escr_flag_					<< endl;
-		cout << "ES_rate_flag : "				<< es_rate_flag_				<< endl;
-		cout << "DSM_trick_mode_flag : "		<< dsm_trick_mode_flag_			<< endl;
-		cout << "additional_copy_info_flag : "	<< additional_copy_info_flag_	<< endl;
-		cout << "PES_CRC_flag : "				<< pes_crc_flag_				<< endl;
-		cout << "PES_extension_flag : "			<< pes_extension_flag_			<< endl;
-		cout << "PES_header_data_length : "		<< (int)pes_header_data_length_	<< endl;
-		
-		if(pts_dts_flags_ == 2)//'10'
-		{
-			cout << "PTS : "			<< 	pts_		<< endl;
-		}
-
-		if(pts_dts_flags_ == 3)//'11'
-		{
-			cout << "PTS : "			<< 	pts_		<< endl;
-			cout << "DTS : "			<< 	dts_		<< endl;
-		}
-
-		if(escr_flag_)//+48bit
-		{
-			cout << "ESCR_base : "				<< 	escr_base_			<< endl;
-			cout << "ESCR_extension : "			<< 	escr_extension_		<< endl;
-		}
-
-		if(es_rate_flag_)//+24bit
-		{
-			cout << "ES_rate : "			<< 	es_rate_		<< endl;			
-		}
-
-		if(dsm_trick_mode_flag_)
-		{
-			cout << "trick_mode_control : "			<< 	trick_mode_control_		<< endl;			
-			 
-			if(trick_mode_control_ == fast_forward){
-				cout << "field_id : "						<< 	field_id_				<< endl;
-				cout << "intra_slice_refresh : "			<< 	intra_slice_refresh_	<< endl;
-				cout << "frequency_truncation : "			<< 	frequency_truncation_	<< endl;
-			}
-			if(trick_mode_control_ == slow_motion ){
-				cout << "rep_cntrl : "						<< 	rep_cntrl_				<< endl;
-			}
-			if(trick_mode_control_ == freeze_frame){
-				cout << "field_id : "						<< 	field_id_				<< endl;
-			}
-			if(trick_mode_control_ == fast_reverse){
-				cout << "field_id : "						<< 	field_id_				<< endl;
-				cout << "intra_slice_refresh : "			<< 	intra_slice_refresh_	<< endl;
-				cout << "frequency_truncation : "			<< 	frequency_truncation_	<< endl;
-			}
-			if(trick_mode_control_ == slow_reverse){
-				cout << "rep_cntrl : "						<< 	rep_cntrl_				<< endl;
-			}
-		}
-
-		if(additional_copy_info_flag_)
-		{
-			cout << "additional_copy_info : "		<< 	additional_copy_info_	<< endl;
-		}
-
-		if(pes_crc_flag_)
-		{
-			cout << "previous_PES_packet_CRC : "		<< 	previous_pes_packet_crc_	<< endl;			
-		}
-
-		if(pes_extension_flag_)
-		{
-			cout << "PES_private_data_flag : "				<< 	pes_private_data_flag_	<< endl;			
-			cout << "pack_header_field_flag : "				<< 	pack_header_field_flag_	<< endl;			
-			cout << "program_packet_sequence_counter_flag : "<< 	program_packet_sequence_counter_flag_	<< endl;			
-			cout << "P_STD_buffer_flag : "					<< 	p_std_buffer_flag_	<< endl;			
-			cout << "PES_extension_flag_2 : "				<< 	pes_extension_flag_2_	<< endl;			
-			cout << "PES_private_data_flag : "				<< 	pes_private_data_flag_	<< endl;			
-			
-			if(pes_private_data_flag_)
-			{
-				//FIXME
-				cout << "PES_private_data : "		<< 	pes_private_data_[0]	<< pes_private_data_[1] << endl;
-			}
-			if(pack_header_field_flag_)
-			{
-				cout << "pack_field_length : "		<< 	pack_field_length_	 << endl;				 
-			}
-			if(program_packet_sequence_counter_flag_)
-			{
-				cout << "program_packet_sequence_counter : "		<< 	program_packet_sequence_counter_	 << endl;
-				cout << "MPEG1_MPEG2_identifier : "		<< 	mpeg1_mpeg2_identifier_	 << endl;
-				cout << "original_stuff_length : "		<< 	original_stuff_length_	 << endl;
-			}
-			if(p_std_buffer_flag_)
-			{
-				cout << "P_STD_buffer_scale : "		<< 	p_std_buffer_scale_	 << endl;
-				cout << "P_STD_buffer_size : "		<< 	p_std_buffer_size_	 << endl;				
-			}
-			if(pes_extension_flag_2_)
-			{
-				cout << "PES_extension_field_length : "		<<  pes_extension_field_length_	 << endl;								
-			}
-		}		
-	}
-	cout << endl;
-	is_exist_data_ = false;
-	}
+	char bufffer[1024] = "";
+	strcpy(bufffer,packet_info_buffer_.c_str());
+	cout << bufffer;
 }

@@ -21,9 +21,9 @@ private:
 	__int64 total_packet_;
 
 	string send_buffer_;
-
+	string hex_data_buffer_;
 public:
-	PacketAnalyzer(void);
+	PacketAnalyzer(char* file_name);
 	~PacketAnalyzer(void);
 
 	void FileOpen(char* file_name_);
@@ -44,6 +44,7 @@ public:
 
 	void SetPrintHexData();
 
+	void SetPrintInfo();
 	void PrintInfo();
 	void PrintHex();
 	void CloseFile();
@@ -51,5 +52,6 @@ public:
 
 	__int64 GetCurrentPacket();
 	__int64 GetTotalPacket();
+
 	string GetSendBuffer();
 };

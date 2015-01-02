@@ -2,12 +2,6 @@
 #include "StdAfx.h"
 
 
-typedef unsigned char  uint8;
-typedef unsigned short uint16;
-typedef unsigned int   uint32;
-typedef unsigned long  uint64;
-
-
 class CCATPacket
 {
 private:
@@ -29,14 +23,16 @@ private:
 	
 	uint32 crc_32_;					//32bit
 
+	string packet_info_buffer_;
 
 public:
 	void Init();	
 	void SetPos(int pos);
 	void PlusDataPosition(int plus);
 	void SetHeaderInfo(unsigned char* data);
-	void PrintCATInfo();
+	void SetPrintCATInfo();
 
+	string GetPacketInfoBuffer();
 
 	CCATPacket(void);
 	~CCATPacket(void);

@@ -39,6 +39,8 @@ void PATPacket::Init()
 	pid_info_ = NULL;
 
 	crc_32_ = 0;					//32bit
+
+	packet_info_buffer_ = "";
 }
 
 void PATPacket::SetPos(int pos_input)
@@ -51,36 +53,42 @@ void PATPacket::PlusDataPosition(int plus)
 	pos_ += plus;
 }
 
-void PATPacket::PrintPATInfo()
+string PATPacket::GetPacketInfoBuffer()
+{
+	return packet_info_buffer_;
+}
+
+void PATPacket::SetPrintPATInfo()
 {
 	if(is_exist_data_){
-	cout << "== PAT packet fields == "<< endl;
-	cout << "table_id : " << hex <<(int)table_id_ << dec << endl;
-	cout << "section_syntax_indicator : " << section_syntax_indicator_ << endl;
-	cout << "section_length : " << section_length_ << endl;
-	cout << "transport_stream_id : " << transport_stream_id_ << endl;
-	cout << "version_number : " << (int)version_number_ << endl;
-	cout << "current_next_indicator : " << current_next_indicator_ << endl;
-	cout << "section_number : " << (int)section_number_ << endl;
-	cout << "last_section_number : " << (int)last_section_number_ << endl<<endl;
-		
-	int size = (section_length_-9)/4;
-	if(pid_info_ != NULL){
-		for(int i=0; i<size; i++)
-		{
-			cout << "program_number : " << pid_info_[i].program_number_ << endl;
+		packet_info_buffer_ += "== PAT packet fields == \n";
+		packet_info_buffer_ += "table_id : " +					to_string((long long)(int)table_id_				)+"\n";
+		packet_info_buffer_ += "section_syntax_indicator : " +	to_string((long long)section_syntax_indicator_	)+"\n";
+		packet_info_buffer_ += "section_length : " +			to_string((long long)section_length_			)+"\n";
+		packet_info_buffer_ += "transport_stream_id : " +		to_string((long long)transport_stream_id_		)+"\n";
+		packet_info_buffer_ += "version_number : " +			to_string((long long)(int)version_number_		)+"\n";
+		packet_info_buffer_ += "current_next_indicator : " +	to_string((long long)current_next_indicator_	)+"\n";
+		packet_info_buffer_ += "section_number : " +			to_string((long long)(int)section_number_		)+"\n";
+		packet_info_buffer_ += "last_section_number : " +		to_string((long long)(int)last_section_number_	)+"\n\n";
 
-			if(pid_info_[i].program_number_==0)
+		int size = (section_length_-9)/4;
+		if(pid_info_ != NULL){
+			for(int i=0; i<size; i++)
 			{
-				cout << "network_PID : " << pid_info_[i].network_pid_ << endl;
-			}else{
-				cout << "program_map_PID : " << pid_info_[i].program_map_pid_ << endl;
+				packet_info_buffer_ += "program_number : " + to_string((long long)pid_info_[i].program_number_ )+"\n";
+
+				if(pid_info_[i].program_number_==0)
+				{
+					packet_info_buffer_ += "network_PID : " + to_string((long long)pid_info_[i].network_pid_ )+"\n";
+				}else{
+					packet_info_buffer_ += "program_map_PID : " + to_string((long long)pid_info_[i].program_map_pid_ )+"\n";
+				}
 			}
 		}
-	}
-	cout << "CRC_32 : " <<hex<< (crc_32_) << dec<< endl<<endl;
-	is_exist_data_ = false;
-	
+		packet_info_buffer_ += "CRC_32 : " +to_string((long long)(crc_32_) ) + "\n\n";
+		is_exist_data_ = false;
+	}else{
+		packet_info_buffer_ = "";
 	}
 }
 
